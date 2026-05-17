@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('consultations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('customer_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('nutritionist_id')->constrained('users')->onDelete('set null');
+            $table->foreignId('nutritionist_id')->constrained('users');
             $table->string('topic')->nullable(false);
             $table->enum('status', ['open', 'on_going', 'closed'])->default('open')->nullable(false);
             $table->timestamps();
