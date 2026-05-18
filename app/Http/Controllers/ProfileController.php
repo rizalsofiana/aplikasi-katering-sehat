@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\UserProfile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,6 +20,60 @@ class ProfileController extends Controller
         return view('profile.edit', [
             'user' => $request->user(),
         ]);
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        // 1. Validasi data fisik dari pop-up
+        $request->validate([
+            'gender' => ['required', 'in:male,female'],
+            'age' => ['required', 'integer', 'min:10', 'max:100'],
+            'weight_kg' => ['required', 'numeric', 'min:30', 'max:300'],
+            'height_cm' => ['required', 'numeric', 'min:100', 'max:250'],
+            'activity_level' => ['required', 'in:sedentary,lightly_active,moderately_active,very_active'],
+            'diet_goal' => ['required', 'in:weight_loss,maintenance,weight_gain'],
+        ]);
+
+        $weight = $request->weight_kg;
+        $height = $request->height_cm;
+        $age = $request->age;
+
+        // 2. Hitung BMR & TDEE (Rumus Harris-Benedict)
+        if ($request->gender === 'male') {
+            $bmr = 88.362 + (13.397 * $weight) + (4.799 * $height) - (5.677 * $age);
+        } else {
+            $bmr = 447.593 + (9.247 * $weight) + (3.098 * $height) - (4.330 * $age);
+        }
+
+        $activityMultipliers = [
+            'sedentary' => 1.2,
+            'lightly_active' => 1.375,
+            'moderately_active' => 1.55,
+            'very_active' => 1.725,
+        ];
+        $tdee = $bmr * $activityMultipliers[$request->activity_level];
+
+        if ($request->diet_goal === 'weight_loss') {
+            $dailyCalorieTarget = $tdee - 500;
+        } elseif ($request->diet_goal === 'weight_gain') {
+            $dailyCalorieTarget = $tdee + 500;
+        } else {
+            $dailyCalorieTarget = $tdee;
+        }
+
+        // 3. Simpan ke database
+        UserProfile::create([
+            'user_id' => Auth::id(),
+            'gender' => $request->gender,
+            'age' => $request->age,
+            'weight_kg' => $request->weight_kg,
+            'height_cm' => $request->height_cm,
+            'activity_level' => $request->activity_level,
+            'diet_goal' => $request->diet_goal,
+            'daily_calorie_target' => round($dailyCalorieTarget),
+        ]);
+
+        return redirect()->back()->with('success', 'Data profil kesehatan berhasil disimpan!');
     }
 
     /**
