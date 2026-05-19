@@ -8,23 +8,61 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    $user = Auth::user();
+// --- ROUTE GROUP UNTUK USER YANG SUDAH LOGIN ---
+Route::middleware(['auth', 'verified'])->group(function () {
 
-    // Ambil data profile beserta nutrisinya jika ada
-    $profile = $user->profile;
+    // 1. DASHBOARD UTAMA (Mengarahkan atau memuat view sesuai role)
+    Route::get('/dashboard', function () {
+        $user = Auth::user();
+        $profile = $user->profile;
 
-    // Contoh data dummy untuk status pengiriman hari ini (Nanti bisa dihubungkan ke tabel deliveries)
-    $todayDelivery = $profile ? $user->subscriptions()->where('status', 'active')->first() : null;
+        // Contoh data dummy langganan (bisa disesuaikan dengan relasi tabel Anda nantinya)
+        $todayDelivery = $profile ? null : null;
 
-    return view('dashboard', compact('profile', 'todayDelivery'));
-})->middleware(['auth', 'verified'])->name('dashboard');
+        // Cek role untuk menentukan view dashboard yang dimuat
+        if ($user->role === 'admin') {
+            return view('dashboard.admin');
+        } elseif ($user->role === 'nutritionist') {
+            return view('dashboard.nutritionist', compact('profile'));
+        } elseif ($user->role === 'driver') {
+            return view('dashboard.driver', compact('profile'));
+        }
 
-Route::middleware('auth')->group(function () {
+        // Default: Halaman Dashboard Customer (yang ada Pop-up melengkapi data fisik)
+        return view('dashboard.customer', compact('profile', 'todayDelivery'));
+    })->name('dashboard');
+
+    // Route untuk simpan profile fisik customer dari Pop-up
+    Route::post('/user-profile/store', [ProfileController::class, 'store'])->name('profile.store');
+
+    // 2. KELOMPOK RUTE KHUSUS ADMIN (Hanya bisa diakses jika role = admin)
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('/admin/kelola-menu', function () {
+            return view('admin.menu');
+        })->name('admin.menu');
+        Route::get('/admin/kelola-user', function () {
+            return view('admin.users');
+        })->name('admin.users');
+    });
+
+    // 3. KELOMPOK RUTE KHUSUS NUTRISIONIS (ROLE: nutritionist)
+    Route::middleware(['role:nutritionist'])->group(function () {
+        Route::get('/nutritionist/konsultasi', function () {
+            return view('nutritionist.consultation');
+        })->name('nutritionist.consultation');
+    });
+
+    // 4. KELOMPOK RUTE KHUSUS DRIVER (ROLE: driver)
+    Route::middleware(['role:driver'])->group(function () {
+        Route::get('/driver/antaran', function () {
+            return view('driver.delivery');
+        })->name('driver.delivery');
+    });
+
+    // Rute Profile bawaan Breeze
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::post('/profile', [ProfileController::class, 'store'])->name('profile.store');
 });
 
 require __DIR__ . '/auth.php';
