@@ -24,7 +24,6 @@ class ProfileController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        // 1. Validasi data fisik dari pop-up
         $request->validate([
             'gender' => ['required', 'in:male,female'],
             'age' => ['required', 'integer', 'min:10', 'max:100'],
@@ -38,7 +37,7 @@ class ProfileController extends Controller
         $height = $request->height_cm;
         $age = $request->age;
 
-        // 2. Hitung BMR & TDEE (Rumus Harris-Benedict)
+        // Hitung BMR & TDEE (Rumus Harris-Benedict)
         if ($request->gender === 'male') {
             $bmr = 88.362 + (13.397 * $weight) + (4.799 * $height) - (5.677 * $age);
         } else {
