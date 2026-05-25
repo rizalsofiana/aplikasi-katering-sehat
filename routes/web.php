@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\MenuController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -8,58 +10,48 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// --- ROUTE GROUP UNTUK USER YANG SUDAH LOGIN ---
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    // 1. DASHBOARD UTAMA (Mengarahkan atau memuat view sesuai role)
     Route::get('/dashboard', function () {
         $user = Auth::user();
         $profile = $user->profile;
 
-        // Contoh data dummy langganan (bisa disesuaikan dengan relasi tabel Anda nantinya)
-        $todayDelivery = $profile ? null : null;
-
-        // Cek role untuk menentukan view dashboard yang dimuat
         if ($user->role === 'admin') {
-            return view('dashboard.admin');
+            return view('admin.admin');
         } elseif ($user->role === 'nutritionist') {
-            return view('dashboard.nutritionist', compact('profile'));
+            return view('nutritionist.nutritionist', compact('profile'));
         } elseif ($user->role === 'driver') {
-            return view('dashboard.driver', compact('profile'));
+            return view('driver.driver', compact('profile'));
         }
 
-        // Default: Halaman Dashboard Customer (yang ada Pop-up melengkapi data fisik)
-        return view('dashboard.customer', compact('profile', 'todayDelivery'));
+        return view('customer.customer', compact('profile'));
     })->name('dashboard');
 
-    // Route untuk simpan profile fisik customer dari Pop-up
     Route::post('/user-profile/store', [ProfileController::class, 'store'])->name('profile.store');
 
-    // 2. KELOMPOK RUTE KHUSUS ADMIN (Hanya bisa diakses jika role = admin)
     Route::middleware(['role:admin'])->group(function () {
-        Route::get('/admin/kelola-menu', function () {
-            return view('admin.menu');
-        })->name('admin.menu');
-        Route::get('/admin/kelola-user', function () {
-            return view('admin.users');
-        })->name('admin.users');
+        Route::get('/admin/kelola-menu', [MenuController::class, 'index'])->name('admin.menu');
+        Route::post('/admin/kelola-menu/store', [MenuController::class, 'store'])->name('admin.menu.store');
+        Route::put('/admin/kelola-menu/{id}', [MenuController::class, 'update'])->name('admin.menu.update');
+        Route::delete('/admin/kelola-menu/{id}', [MenuController::class, 'destroy'])->name('admin.menu.destroy');
+
+        Route::get('/admin/kelola-pengguna', [UserController::class, 'index'])->name('admin.users');
+        Route::post('/admin/kelola-pengguna/store', [UserController::class, 'store'])->name('admin.users.store');
+        Route::delete('/admin/kelola-pengguna/{id}', [UserController::class, 'destroy'])->name('admin.users.destroy');
     });
 
-    // 3. KELOMPOK RUTE KHUSUS NUTRISIONIS (ROLE: nutritionist)
     Route::middleware(['role:nutritionist'])->group(function () {
         Route::get('/nutritionist/konsultasi', function () {
             return view('nutritionist.consultation');
         })->name('nutritionist.consultation');
     });
 
-    // 4. KELOMPOK RUTE KHUSUS DRIVER (ROLE: driver)
     Route::middleware(['role:driver'])->group(function () {
         Route::get('/driver/antaran', function () {
             return view('driver.delivery');
         })->name('driver.delivery');
     });
 
-    // Rute Profile bawaan Breeze
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

@@ -38,8 +38,8 @@
                         </svg>
                         Dashboard Admin
                     </a>
-                    <a href="#"
-                        class="flex px-3 py-2.5 rounded-xl text-sm font-bold {{ request()->routeIs('dashboard.manage-menus') ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-50 hover:text-emerald-700' }}">
+                    <a href="{{ route('admin.menu') }}"
+                        class="flex px-3 py-2.5 rounded-xl text-sm font-bold {{ request()->routeIs('admin.menu') ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-50 hover:text-emerald-700' }}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                             class="bi bi-clipboard-data-fill me-2" viewBox="0 0 16 16">
                             <path
@@ -49,8 +49,8 @@
                         </svg>
                         Kelola Menu Diet
                     </a>
-                    <a href="#"
-                        class="flex px-3 py-2.5 rounded-xl text-sm font-bold {{ request()->routeIs('dashboard.manage-users') ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-50 hover:text-emerald-700' }}">
+                    <a href="{{ route('admin.users') }}"
+                        class="flex px-3 py-2.5 rounded-xl text-sm font-bold {{ request()->routeIs('dashboard.users') ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-50 hover:text-emerald-700' }}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                             class="bi bi-person-fill-gear me-2" viewBox="0 0 16 16">
                             <path
