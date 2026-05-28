@@ -6,7 +6,7 @@
     }" class="py-8 px-4 sm:px-6 lg:px-8 space-y-6">
 
         <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-            <h3 class="text-xl font-bold text-slate-900">Kelola Menu Katering Diet 🥦</h3>
+            <h3 class="text-xl font-bold text-slate-900">Kelola Menu Katering Diet</h3>
             <p class="text-sm text-slate-500 mt-0.5">Manajemen basis data kuliner sehat terintegrasi tabel nutrisi makro.
             </p>
         </div>

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\MenuController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Auth;
@@ -51,6 +52,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return view('driver.delivery');
         })->name('driver.delivery');
     });
+
+    Route::middleware(['role:customer'])->group(function () {
+        Route::get('/order', [OrderController::class, 'index'])->name('customer.orders.index');
+    });
+
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

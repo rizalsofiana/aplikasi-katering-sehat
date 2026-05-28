@@ -20,6 +20,17 @@ return new class extends Migration
             $table->enum('status', ['pending', 'active', 'cancelled', 'completed'])->default('active')->nullable(false);
             $table->timestamps();
         });
+
+        Schema::create('subscription_payments', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('subscription_id')->constrained('subscriptions')->onDelete('cascade');
+            $table->string('invoice_number')->unique();
+            $table->decimal('amount', 12, 2);
+            $table->string('payment_method')->nullable();
+            $table->enum('status', ['pending', 'completed', 'failed', 'expired'])->default('pending');
+            $table->timestamp('paid_at')->nullable();
+            $table->timestamps();
+        });
     }
 
     /**

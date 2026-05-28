@@ -4,7 +4,7 @@
         <div
             class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-                <h3 class="text-xl font-bold text-slate-900">Kelola Pengguna Sistem 👥</h3>
+                <h3 class="text-xl font-bold text-slate-900">Kelola Pengguna Sistem</h3>
                 <p class="text-sm text-slate-500 mt-0.5">Pantau data pengguna, daftarkan akun staf operasional, dan
                     kelola kurir.</p>
             </div>
