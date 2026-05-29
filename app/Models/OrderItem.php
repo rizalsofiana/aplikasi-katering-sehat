@@ -10,6 +10,11 @@ use Illuminate\Database\Eloquent\Model;
 #[Table('order_items')]
 class OrderItem extends Model
 {
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
+
     public function menu()
     {
         return $this->belongsTo(Menu::class);

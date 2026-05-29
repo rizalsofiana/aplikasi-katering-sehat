@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['menu_id', 'driver_id', 'delivery_date', 'meal_time', 'status'])]
+#[Fillable(['menu_id', 'driver_id', 'delivery_date', 'meal_time', 'delivery_address', 'status', 'notes'])]
 class Delivery extends Model
 {
     public function menu()

@@ -22,7 +22,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         } elseif ($user->role === 'nutritionist') {
             return view('nutritionist.nutritionist', compact('profile'));
         } elseif ($user->role === 'driver') {
-            return view('driver.driver', compact('profile'));
+            return redirect()->route('deliveries.index');
         }
 
         return view('customer.customer', compact('profile'));
@@ -39,6 +39,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/admin/kelola-pengguna', [UserController::class, 'index'])->name('admin.users');
         Route::post('/admin/kelola-pengguna/store', [UserController::class, 'store'])->name('admin.users.store');
         Route::delete('/admin/kelola-pengguna/{id}', [UserController::class, 'destroy'])->name('admin.users.destroy');
+
+        Route::get('/admin/kelola-pesanan', [OrderController::class, 'adminIndex'])->name('admin.orders.index');
+        Route::get('/admin/kelola-pesanan/{id}', [OrderController::class, 'adminShow'])->name('admin.orders.show');
+        Route::patch('/admin/kelola-pesanan/{id}/confirm', [OrderController::class, 'confirmPayment'])->name('admin.orders.confirm');
+        Route::post('/admin/kelola-pesanan/{id}/assign-driver', [OrderController::class, 'assignDriver'])->name('admin.orders.assign_driver');
     });
 
     Route::middleware(['role:nutritionist'])->group(function () {
@@ -48,13 +53,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::middleware(['role:driver'])->group(function () {
-        Route::get('/driver/antaran', function () {
-            return view('driver.delivery');
-        })->name('driver.delivery');
+        Route::get('/deliveries', [OrderController::class, 'driverIndex'])->name('deliveries.index');
+        // Driver ambil orderan kosong
+        Route::patch('/deliveries/{id}/take', [OrderController::class, 'takeOrder'])->name('deliveries.take');
+        // Driver ubah status jadi otw
+        Route::patch('/deliveries/{id}/otw', [OrderController::class, 'updateStatusToOnTheWay'])->name('deliveries.otw');
+        Route::patch('/deliveries/{id}/delivered', [OrderController::class, 'updateStatusToDelivered'])->name('deliveries.delivered');
+        Route::patch('/deliveries/{id}/failed', [OrderController::class, 'updateStatusToFailed'])->name('deliveries.failed');
     });
 
     Route::middleware(['role:customer'])->group(function () {
         Route::get('/order', [OrderController::class, 'index'])->name('customer.orders.index');
+        Route::post('/order/checkout', [OrderController::class, 'store'])->name('customer.orders.store');
     });
 
 

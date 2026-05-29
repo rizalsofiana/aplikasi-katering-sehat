@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::create('deliveries', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('subscription_id')->constrained()->onDelete('cascade');
             $table->foreignId('menu_id')->constrained()->onDelete('cascade');
             $table->foreignId('driver_id')->nullable()->constrained('users')->onDelete('set null');
             $table->date('delivery_date')->nullable(false);

@@ -52,7 +52,7 @@ class MenuController extends Controller
             'protein_g' => 'required|numeric|min:0',
             'carbs_g' => 'required|numeric|min:0',
             'fat_g' => 'required|numeric|min:0',
-            'is_available' => 'required|boolean',
+            'is_available' => 'required|     ',
         ]);
 
         $menu = Menu::findOrFail($id);
