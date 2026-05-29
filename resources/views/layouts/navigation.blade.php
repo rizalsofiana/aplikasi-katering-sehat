@@ -96,7 +96,7 @@
             @if (Auth::user()->role === 'customer')
                 <a href="{{ route('dashboard') }}"
                     class="block ps-3 pr-4 py-2 border-l-4 {{ request()->routeIs('dashboard') ? 'border-emerald-500 text-emerald-700 bg-emerald-50/50 font-bold' : 'border-transparent text-slate-600' }} text-base font-medium">Dashboard</a>
-                <a href={{ route('customer.orders.index') }}"
+                <a href={{ route('customer.orders.index') }}
                     class="block ps-3 pr-4 py-2 border-l-4 {{ request()->routeIs('customer.orders.index') ? 'border-emerald-500 text-emerald-700 bg-emerald-50/50 font-bold' : 'border-transparent text-slate-600 hover:text-emerald-700' }} text-base font-medium">Menu</a>
                 <a href="#"
                     class="block ps-3 pr-4 py-2 border-l-4 {{ request()->routeIs('customer.consultation') ? 'border-emerald-500 text-emerald-700 bg-emerald-50/50 font-bold' : 'border-transparent text-slate-600 hover:text-emerald-700' }} text-base font-medium">Konsultasi

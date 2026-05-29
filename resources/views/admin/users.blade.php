@@ -160,7 +160,7 @@
                                                     {{ $user->driverDetail->delivery_zone ?? 'Belum Diatur' }}</p>
                                                 <p
                                                     class="font-bold {{ $user->driverDetail->status === 'available' ? 'text-emerald-600' : 'text-amber-600' }}">
-                                                    📍 Status: {{ uppercase($user->driverDetail->status) }}
+                                                    📍 Status: {{ strtoupper($user->driverDetail->status) }}
                                                 </p>
                                             </div>
                                         @endif

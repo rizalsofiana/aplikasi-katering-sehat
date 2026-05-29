@@ -19,9 +19,4 @@ class Subscription extends Model
     {
         return $this->belongsTo(Package::class);
     }
-
-    public function deliveries()
-    {
-        return $this->hasMany(Delivery::class);
-    }
 }

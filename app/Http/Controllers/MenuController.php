@@ -10,7 +10,6 @@ class MenuController extends Controller
 {
     public function index()
     {
-        // Mengambil menu beserta data nutrisinya sekaligus (Eager Loading)
         $menus = Menu::with('nutrition')->latest()->get();
         return view('admin.menu', compact('menus'));
     }
@@ -26,16 +25,13 @@ class MenuController extends Controller
             'fat_g' => 'required|numeric|min:0',
         ]);
 
-        // Gunakan Transaction agar penyimpanan aman di dua tabel
         DB::transaction(function () use ($request) {
-            // Simpan ke tabel 'menus'
             $menu = Menu::create([
                 'name' => $request->name,
                 'description' => $request->description,
-                'is_available' => $request->has('is_available') ? true : true, // default true
+                'is_available' => $request->has('is_available') ? true : true,
             ]);
 
-            // Simpan ke tabel 'menu_nutritions' memanfaatkan relasi
             $menu->nutrition()->create([
                 'calories' => $request->calories,
                 'protein_g' => $request->protein_g,
@@ -61,16 +57,13 @@ class MenuController extends Controller
 
         $menu = Menu::findOrFail($id);
 
-        // Gunakan Transaction agar perubahan di kedua tabel konsisten
         DB::transaction(function () use ($request, $menu) {
-            // Update tabel 'menus'
             $menu->update([
                 'name' => $request->name,
                 'description' => $request->description,
                 'is_available' => $request->is_available,
             ]);
 
-            // Update atau buat baru (jika sebelumnya kosong) di tabel 'menu_nutritions'
             $menu->nutrition()->updateOrCreate(
                 ['menu_id' => $menu->id],
                 [
