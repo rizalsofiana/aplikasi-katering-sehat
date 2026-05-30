@@ -50,7 +50,7 @@
                         Kelola Menu Diet
                     </a>
                     <a href="{{ route('admin.users') }}"
-                        class="flex px-3 py-2.5 rounded-xl text-sm font-bold {{ request()->routeIs('dashboard.users') ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-50 hover:text-emerald-700' }}">
+                        class="flex px-3 py-2.5 rounded-xl text-sm font-bold {{ request()->routeIs('admin.users') ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-50 hover:text-emerald-700' }}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                             class="bi bi-person-fill-gear me-2" viewBox="0 0 16 16">
                             <path
@@ -59,7 +59,7 @@
                         Kelola Pengguna
                     </a>
                     <a href="{{ route('admin.orders.index') }}"
-                        class="flex px-3 py-2.5 rounded-xl text-sm font-bold {{ request()->routeIs('admin.orders.index') ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-50 hover:text-emerald-700' }}">
+                        class="flex px-3 py-2.5 rounded-xl text-sm font-bold {{ request()->routeIs('admin.orders.index', 'admin.orders.show') ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-50 hover:text-emerald-700' }}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                             class="bi bi-truck me-2" viewBox="0 0 16 16">
                             <path

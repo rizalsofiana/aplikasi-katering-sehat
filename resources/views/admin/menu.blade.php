@@ -18,6 +18,17 @@
             </div>
         @endif
 
+        @if ($errors->any())
+            <div class="bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 rounded-xl text-xs">
+                <p class="font-bold mb-1">⚠️ Terjadi kesalahan input:</p>
+                <ul class="list-disc pl-4 space-y-0.5">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
 
             <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
@@ -28,7 +39,8 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Nama
                             Makanan</label>
-                        <input type="text" name="name" placeholder="Contoh: Berry Nutty Oatmeal"
+                        <input type="text" name="name" value="{{ old('name') }}"
+                            placeholder="Contoh: Berry Nutty Oatmeal"
                             class="block w-full rounded-xl border-slate-200 text-sm focus:border-emerald-500 focus:ring-emerald-500 shadow-sm"
                             required>
                     </div>
@@ -37,15 +49,34 @@
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Deskripsi /
                             Komposisi</label>
                         <textarea name="description" rows="2" placeholder="Komposisi bahan makanan..."
-                            class="block w-full rounded-xl border-slate-200 text-sm focus:border-emerald-500 focus:ring-emerald-500 shadow-sm"></textarea>
+                            class="block w-full rounded-xl border-slate-200 text-sm focus:border-emerald-500 focus:ring-emerald-500 shadow-sm">{{ old('description') }}</textarea>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Energi /
-                            Kalori (kkal)</label>
-                        <input type="number" name="calories" placeholder="380"
-                            class="block w-full rounded-xl border-slate-200 text-sm focus:border-emerald-500 focus:ring-emerald-500 shadow-sm"
-                            required>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Energi /
+                                Kalori</label>
+                            <div class="relative rounded-xl shadow-sm">
+                                <input type="number" name="calories" value="{{ old('calories') }}" placeholder="380"
+                                    class="block w-full rounded-xl border-slate-200 text-sm focus:border-emerald-500 focus:ring-emerald-500 shadow-sm pr-12"
+                                    required>
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    <span class="text-xs text-slate-400 font-semibold">kkal</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label
+                                class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Ketersediaan</label>
+                            <select name="is_available"
+                                class="block w-full rounded-xl border-slate-200 text-sm focus:border-emerald-500 focus:ring-emerald-500 shadow-sm">
+                                <option value="1" {{ old('is_available') == '1' ? 'selected' : '' }}>Ready
+                                    (Tersedia)</option>
+                                <option value="0" {{ old('is_available') == '0' ? 'selected' : '' }}>Kosong (Habis)
+                                </option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-3 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
@@ -53,24 +84,27 @@
                             <label
                                 class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Protein
                                 (g)</label>
-                            <input type="number" step="0.01" name="protein_g" placeholder="24.5"
-                                class="block w-full rounded-lg border-slate-200 text-xs focus:border-emerald-500"
+                            <input type="number" step="0.01" name="protein_g" value="{{ old('protein_g') }}"
+                                placeholder="24.5"
+                                class="block w-full rounded-lg border-slate-200 text-xs focus:border-emerald-500 focus:ring-emerald-500"
                                 required>
                         </div>
                         <div>
                             <label
                                 class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Karbo
                                 (g)</label>
-                            <input type="number" step="0.01" name="carbs_g" placeholder="40.2"
-                                class="block w-full rounded-lg border-slate-200 text-xs focus:border-emerald-500"
+                            <input type="number" step="0.01" name="carbs_g" value="{{ old('carbs_g') }}"
+                                placeholder="40.2"
+                                class="block w-full rounded-lg border-slate-200 text-xs focus:border-emerald-500 focus:ring-emerald-500"
                                 required>
                         </div>
                         <div>
                             <label
                                 class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Lemak
                                 (g)</label>
-                            <input type="number" step="0.01" name="fat_g" placeholder="8.7"
-                                class="block w-full rounded-lg border-slate-200 text-xs focus:border-emerald-500"
+                            <input type="number" step="0.01" name="fat_g" value="{{ old('fat_g') }}"
+                                placeholder="8.7"
+                                class="block w-full rounded-lg border-slate-200 text-xs focus:border-emerald-500 focus:ring-emerald-500"
                                 required>
                         </div>
                     </div>
@@ -104,7 +138,8 @@
                                     <td class="py-4 px-6">
                                         <p class="font-bold text-slate-900">{{ $menu->name }}</p>
                                         <p class="text-xs text-slate-400 truncate max-w-[220px]">
-                                            {{ $menu->description ?? 'Tidak ada deskripsi.' }}</p>
+                                            {{ $menu->description ?? 'Tidak ada deskripsi.' }}
+                                        </p>
                                     </td>
                                     <td class="py-4 px-6">
                                         @if ($menu->is_available)
@@ -120,31 +155,33 @@
                                             <p class="font-bold text-slate-900">{{ $menu->nutrition->calories }} kkal
                                             </p>
                                             <p class="text-slate-400 mt-0.5">P: {{ $menu->nutrition->protein_g }}g | K:
-                                                {{ $menu->nutrition->carbs_g }}g | L: {{ $menu->nutrition->fat_g }}g</p>
+                                                {{ $menu->nutrition->carbs_g }}g | L: {{ $menu->nutrition->fat_g }}g
+                                            </p>
                                         @else
-                                            <span class="text-xs text-red-400 italic">Data gizi kosong</span>
+                                            <span class="text-xs text-rose-400 italic font-medium">Data gizi
+                                                kosong</span>
                                         @endif
                                     </td>
                                     <td class="py-4 px-6">
                                         <div class="flex items-center justify-center space-x-3">
                                             <button
                                                 @click="
-                                                editUrl = '{{ route('admin.menu.update', $menu->id) }}';
-                                                menuData.name = '{{ addslashes($menu->name) }}';
-                                                menuData.description = '{{ addslashes($menu->description) }}';
-                                                menuData.calories = '{{ $menu->nutrition->calories ?? 0 }}';
-                                                menuData.protein_g = '{{ $menu->nutrition->protein_g ?? 0 }}';
-                                                menuData.carbs_g = '{{ $menu->nutrition->carbs_g ?? 0 }}';
-                                                menuData.fat_g = '{{ $menu->nutrition->fat_g ?? 0 }}';
-                                                menuData.is_available = '{{ $menu->is_available ? '1' : '0' }}';
-                                                editModalOpen = true;
-                                            "
+                                                    editUrl = '{{ route('admin.menu.update', $menu->id) }}';
+                                                    menuData.name = '{{ addslashes($menu->name) }}';
+                                                    menuData.description = '{{ addslashes($menu->description) }}';
+                                                    menuData.calories = '{{ $menu->nutrition->calories ?? 0 }}';
+                                                    menuData.protein_g = '{{ $menu->nutrition->protein_g ?? 0 }}';
+                                                    menuData.carbs_g = '{{ $menu->nutrition->carbs_g ?? 0 }}';
+                                                    menuData.fat_g = '{{ $menu->nutrition->fat_g ?? 0 }}';
+                                                    menuData.is_available = '{{ $menu->is_available ? '1' : '0' }}';
+                                                    editModalOpen = true;
+                                                "
                                                 class="text-xs font-bold text-emerald-600 hover:text-emerald-800 hover:underline">
                                                 Edit
                                             </button>
 
                                             <form action="{{ route('admin.menu.destroy', $menu->id) }}" method="POST"
-                                                onsubmit="return confirm('Hapus menu ini?')">
+                                                onsubmit="return confirm('Hapus menu ini beserta data gizinya?')">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit"
@@ -238,7 +275,7 @@
                                     class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Protein
                                     (g)</label>
                                 <input type="number" step="0.01" name="protein_g" x-model="menuData.protein_g"
-                                    class="block w-full rounded-lg border-slate-200 text-xs focus:border-emerald-500"
+                                    class="block w-full rounded-lg border-slate-200 text-xs focus:border-emerald-500 focus:ring-emerald-500"
                                     required>
                             </div>
                             <div>
@@ -246,7 +283,7 @@
                                     class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Karbo
                                     (g)</label>
                                 <input type="number" step="0.01" name="carbs_g" x-model="menuData.carbs_g"
-                                    class="block w-full rounded-lg border-slate-200 text-xs focus:border-emerald-500"
+                                    class="block w-full rounded-lg border-slate-200 text-xs focus:border-emerald-500 focus:ring-emerald-500"
                                     required>
                             </div>
                             <div>
@@ -254,7 +291,7 @@
                                     class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Lemak
                                     (g)</label>
                                 <input type="number" step="0.01" name="fat_g" x-model="menuData.fat_g"
-                                    class="block w-full rounded-lg border-slate-200 text-xs focus:border-emerald-500"
+                                    class="block w-full rounded-lg border-slate-200 text-xs focus:border-emerald-500 focus:ring-emerald-500"
                                     required>
                             </div>
                         </div>

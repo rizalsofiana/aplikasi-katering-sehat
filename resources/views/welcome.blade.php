@@ -72,10 +72,6 @@
                         class="bg-emerald-600 text-white text-center px-6 py-3 rounded-xl font-bold hover:bg-emerald-700 transition shadow-md shadow-emerald-200">
                         Mulai Hitung Kalori Gratis
                     </a>
-                    <a href="#fitur"
-                        class="border border-slate-200 text-slate-600 text-center px-6 py-3 rounded-xl font-bold hover:bg-slate-50 transition">
-                        Pelajari Fitur
-                    </a>
                 </div>
             </div>
 

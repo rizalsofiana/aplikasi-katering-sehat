@@ -45,12 +45,11 @@ class OrderController extends Controller
 
         DB::transaction(function () use ($request, $cartItems, $totalAmount) {
 
-            // 1. Masukkan data ke tabel orders
             $order = Order::create([
                 'user_id' => Auth::id(),
                 'invoice_number' => 'INV-' . strtoupper(Str::random(5)) . '-' . now()->format('YmdHis'),
                 'total_amount' => $totalAmount,
-                'status' => 'paid', // Langsung set paid untuk simulasi POS instan
+                'status' => 'paid',
             ]);
 
             // 2. Loop item untuk disimpan ke order_items dan didaftarkan ke jadwal delivery

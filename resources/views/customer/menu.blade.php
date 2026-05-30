@@ -60,7 +60,7 @@
                             <button
                                 @click="addMenu({{ $menu->id }}, '{{ addslashes($menu->name) }}', 35000, {{ $menu->nutrition->calories ?? 0 }})"
                                 class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-1.5 px-3 rounded-xl transition">
-                                + Tambah ke Struk
+                                + Tambah
                             </button>
                         </div>
                     </div>
