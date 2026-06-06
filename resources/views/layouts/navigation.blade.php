@@ -21,9 +21,17 @@
                             class="inline-flex items-center px-1 pt-1 border-b-2 {{ request()->routeIs('customer.orders.index') ? 'border-emerald-500 text-emerald-600 font-bold' : 'border-transparent text-slate-500 hover:text-emerald-600' }} text-sm font-medium leading-5 transition duration-150 ease-in-out">
                             Menu
                         </a>
+                        <a href="{{ route('customer.orders.history') }}"
+                            class="inline-flex items-center px-1 pt-1 border-b-2 {{ request()->routeIs('customer.orders.history') ? 'border-emerald-500 text-emerald-600 font-bold' : 'border-transparent text-slate-500 hover:text-emerald-600' }} text-sm font-medium leading-5 transition duration-150 ease-in-out">
+                            Riwayat Pesanan
+                        </a>
                         <a href="#"
                             class="inline-flex items-center px-1 pt-1 border-b-2 {{ request()->routeIs('customer.consultation') ? 'border-emerald-500 text-emerald-600 font-bold' : 'border-transparent text-slate-500 hover:text-emerald-600' }} text-sm font-medium leading-5 transition duration-150 ease-in-out">
                             Konsultasi Gizi
+                        </a>
+                        <a href="{{ route('customer.subscriptions.index') }}"
+                            class="inline-flex items-center px-1 pt-1 border-b-2 {{ request()->routeIs('customer.subscriptions.*') ? 'border-emerald-500 text-emerald-600 font-bold' : 'border-transparent text-slate-500 hover:text-emerald-600' }} text-sm font-medium leading-5 transition duration-150 ease-in-out">
+                            Paket Langganan
                         </a>
                     @elseif(Auth::user()->role === 'nutritionist')
                         <a href="{{ route('dashboard') }}"

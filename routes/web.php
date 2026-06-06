@@ -1,8 +1,11 @@
 <?php
 
+use App\Http\Controllers\AdminPackageController;
+use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -30,20 +33,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/user-profile/store', [ProfileController::class, 'store'])->name('profile.store');
 
-    Route::middleware(['role:admin'])->group(function () {
-        Route::get('/admin/kelola-menu', [MenuController::class, 'index'])->name('admin.menu');
-        Route::post('/admin/kelola-menu/store', [MenuController::class, 'store'])->name('admin.menu.store');
-        Route::put('/admin/kelola-menu/{id}', [MenuController::class, 'update'])->name('admin.menu.update');
-        Route::delete('/admin/kelola-menu/{id}', [MenuController::class, 'destroy'])->name('admin.menu.destroy');
+    Route::middleware(['role:admin'])->name('admin.')->group(function () {
+        Route::get('/admin/kelola-menu', [MenuController::class, 'index'])->name('menu');
+        Route::post('/admin/kelola-menu/store', [MenuController::class, 'store'])->name('menu.store');
+        Route::put('/admin/kelola-menu/{id}', [MenuController::class, 'update'])->name('menu.update');
+        Route::delete('/admin/kelola-menu/{id}', [MenuController::class, 'destroy'])->name('menu.destroy');
 
-        Route::get('/admin/kelola-pengguna', [UserController::class, 'index'])->name('admin.users');
-        Route::post('/admin/kelola-pengguna/store', [UserController::class, 'store'])->name('admin.users.store');
-        Route::delete('/admin/kelola-pengguna/{id}', [UserController::class, 'destroy'])->name('admin.users.destroy');
+        Route::get('/admin/kelola-pengguna', [UserController::class, 'index'])->name('users');
+        Route::post('/admin/kelola-pengguna/store', [UserController::class, 'store'])->name('users.store');
+        Route::delete('/admin/kelola-pengguna/{id}', [UserController::class, 'destroy'])->name('users.destroy');
 
-        Route::get('/admin/kelola-pesanan', [OrderController::class, 'adminIndex'])->name('admin.orders.index');
-        Route::get('/admin/kelola-pesanan/{id}', [OrderController::class, 'adminShow'])->name('admin.orders.show');
-        Route::patch('/admin/kelola-pesanan/{id}/confirm', [OrderController::class, 'confirmPayment'])->name('admin.orders.confirm');
-        Route::post('/admin/kelola-pesanan/{id}/assign-driver', [OrderController::class, 'assignDriver'])->name('admin.orders.assign_driver');
+        Route::get('/admin/kelola-pesanan', [OrderController::class, 'adminIndex'])->name('orders.index');
+        Route::get('/admin/kelola-pesanan/{id}', [OrderController::class, 'adminShow'])->name('orders.show');
+        Route::patch('/admin/kelola-pesanan/{id}/confirm', [OrderController::class, 'confirmPayment'])->name('orders.confirm');
+        Route::post('/admin/kelola-pesanan/{id}/assign-driver', [OrderController::class, 'assignDriver'])->name('orders.assign_driver');
+
+        Route::resource('packages', AdminPackageController::class)->except(['show']);
     });
 
     Route::middleware(['role:nutritionist'])->group(function () {
@@ -65,6 +70,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['role:customer'])->group(function () {
         Route::get('/order', [OrderController::class, 'index'])->name('customer.orders.index');
         Route::post('/order/checkout', [OrderController::class, 'store'])->name('customer.orders.store');
+        Route::get('/order/history', [CustomerOrderController::class, 'index'])->name('customer.orders.history');
+
+        Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('customer.subscriptions.index');
+        Route::get('/subscriptions/checkout/{package}', [SubscriptionController::class, 'checkout'])->name('customer.subscriptions.checkout');
+        Route::post('/subscriptions/purchase', [SubscriptionController::class, 'store'])->name('customer.subscriptions.store');
     });
 
 
