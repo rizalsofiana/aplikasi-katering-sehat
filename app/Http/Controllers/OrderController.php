@@ -49,7 +49,7 @@ class OrderController extends Controller
                 'user_id' => Auth::id(),
                 'invoice_number' => 'INV-' . strtoupper(Str::random(5)) . '-' . now()->format('YmdHis'),
                 'total_amount' => $totalAmount,
-                'status' => 'paid',
+                'status' => 'pending',
             ]);
 
             // 2. Loop item untuk disimpan ke order_items dan didaftarkan ke jadwal delivery
