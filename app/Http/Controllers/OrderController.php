@@ -63,13 +63,16 @@ class OrderController extends Controller
                 // PENTING: Otomatis daftarkan ke logistik kurir (Tabel Deliveries) sebanyak Qty yang dibeli
                 for ($i = 0; $i < $item['qty']; $i++) {
                     Delivery::create([
+                        'order_id'        => $order->id,
                         'menu_id'         => $item['id'],
                         'driver_id'       => null, // Nanti di-plot oleh admin
                         'delivery_date'   => $request->delivery_date,
                         'delivery_address' => $request->delivery_address,
+                        'latitude'        => $request->latitude ?? null,
+                        'longitude'       => $request->longitude ?? null,
                         'meal_time'       => $request->meal_time,
                         'status'          => 'cooking',
-                        'notes'           => null
+                        'notes'           => null,
                     ]);
                 }
             }
@@ -110,15 +113,15 @@ class OrderController extends Controller
     {
         $driverId = Auth::id();
 
-        // A. List pesanan yang BELUM memiliki driver (Bisa diambil sendiri oleh driver)
-        $availableDeliveries = Delivery::with(['menu']) // sesuaikan jika order lewat user langsung
+        // A. List pesanan yang BELUM memiliki driver menggunakan nested relationship 'order.user'
+        $availableDeliveries = Delivery::with(['menu', 'order'])
             ->whereNull('driver_id')
-            ->whereIn('status', ['cooking']) // bisa diambil saat dimasak / siap
+            ->whereIn('status', ['cooking'])
             ->latest()
             ->get();
 
         // B. List pesanan yang sedang diambil/ditugaskan ke driver ini
-        $myDeliveries = Delivery::with('menu')
+        $myDeliveries = Delivery::with(['menu', 'order'])
             ->where('driver_id', $driverId)
             ->whereIn('status', ['cooking', 'on_the_way'])
             ->latest()

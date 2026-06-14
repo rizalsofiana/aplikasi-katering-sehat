@@ -72,7 +72,10 @@
                 @endforelse
             </div>
 
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4 sticky top-6">
+            <div id="cart-container"
+                class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4 sticky top-6"
+                x-data="{ openMapModal: false, lat: '', lng: '' }">
+
                 <h4
                     class="font-bold text-slate-900 text-base border-b border-slate-100 pb-2 flex items-center justify-between">
                     <span>Struk Belanja</span>
@@ -123,6 +126,9 @@
                     @csrf
                     <input type="hidden" name="cart_data" :value="JSON.stringify(cart)">
 
+                    <input type="hidden" name="latitude" :value="lat">
+                    <input type="hidden" name="longitude" :value="lng">
+
                     <div class="space-y-3 mb-4">
                         <div>
                             <label
@@ -131,12 +137,23 @@
                             <input type="date" name="delivery_date"
                                 class="block w-full rounded-xl border-slate-200 text-xs" required>
                         </div>
+
                         <div>
                             <label
-                                class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Alamat</label>
+                                class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Alamat
+                                Alamat</label>
                             <textarea name="delivery_address" placeholder="Masukkan alamat disini..."
-                                class="block w-full rounded-xl border-slate-200 text-xs" required></textarea>
+                                class="block w-full rounded-xl border-slate-200 text-xs mb-2" required></textarea>
+
+                            <button type="button" @click="openMapModal = true; initCustomerMap()"
+                                class="w-full inline-flex items-center justify-center space-x-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-3 rounded-xl transition text-[11px] border border-slate-200 shadow-sm">
+                                <span
+                                    x-text="lat ? '📍 Lokasi Terpilih (Ubah)' : '📍 Pilih Titik Koordinat Peta'"></span>
+                            </button>
+                            <p x-show="lat" class="text-[10px] text-emerald-600 mt-1 font-medium text-center"
+                                x-text="'Koordinat Terkunci: ' + lat.substring(0,8) + ', ' + lng.substring(0,8)"></p>
                         </div>
+
                         <div>
                             <label
                                 class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Waktu
@@ -155,7 +172,93 @@
                     </button>
                 </form>
 
+                <div x-show="openMapModal"
+                    class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs"
+                    x-transition>
+                    <div class="bg-white rounded-2xl max-w-lg w-full p-5 space-y-4 shadow-xl border border-slate-100"
+                        @click.away="openMapModal = false">
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                            <h3 class="font-bold text-slate-900 text-sm">Tandai Lokasi Rumah Anda</h3>
+                            <button @click="openMapModal = false"
+                                class="text-slate-400 hover:text-slate-600 font-bold text-sm">&times;</button>
+                        </div>
+
+                        <div id="customer_map_container" class="w-full h-72 rounded-xl border border-slate-200 z-0">
+                        </div>
+
+                        <p class="text-[11px] text-slate-400 italic text-center">Geser penanda merah (*marker*) atau
+                            klik peta pada posisi rumah Anda.</p>
+
+                        <button type="button" @click="openMapModal = false"
+                            class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-xl text-xs transition">
+                            Simpan Titik Lokasi
+                        </button>
+                    </div>
+                </div>
             </div>
+            <script>
+                let customerMap, customerMarker;
+
+                function initCustomerMap() {
+                    let initialLat = -6.94803;
+                    let initialLng = 107.6011;
+
+                    // 🟢 GANTI BARIS INI: Gunakan getElementById agar targetnya 100% akurat
+                    const cartElement = document.getElementById('cart-container');
+                    if (!cartElement) return; // Keamanan jika elemen tidak ditemukan
+
+                    const alpineData = Alpine.$data(cartElement);
+
+                    if (alpineData.lat && alpineData.lng) {
+                        initialLat = parseFloat(alpineData.lat);
+                        initialLng = parseFloat(alpineData.lng);
+                    }
+
+                    // Jalankan timeout kecil agar DOM modal dirender sempurna dulu oleh Alpine
+                    setTimeout(() => {
+                        if (!customerMap) {
+                            // Buat instance peta baru
+                            customerMap = L.map('customer_map_container').setView([initialLat, initialLng], 14);
+
+                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                attribution: '© OpenStreetMap'
+                            }).addTo(customerMap);
+
+                            // Buat marker yang bisa digerakkan (draggable)
+                            customerMarker = L.marker([initialLat, initialLng], {
+                                draggable: true
+                            }).addTo(customerMap);
+
+                            // Sinkronisasi koordinat saat marker digeser kurir/user
+                            customerMarker.on('dragend', function(e) {
+                                let pos = customerMarker.getLatLng();
+                                alpineData.lat = pos.lat.toString();
+                                alpineData.lng = pos.lng.toString();
+                            });
+
+                            // Sinkronisasi koordinat saat peta diklik
+                            customerMap.on('click', function(e) {
+                                customerMarker.setLatLng(e.latlng);
+                                alpineData.lat = e.latlng.lat.toString();
+                                alpineData.lng = e.latlng.lng.toString();
+                            });
+
+                            // Set nilai awal ke input Alpine jika baru pertama kali buka peta
+                            if (!alpineData.lat) {
+                                alpineData.lat = initialLat.toString();
+                                alpineData.lng = initialLng.toString();
+                            }
+                        } else {
+                            // Jika peta sudah ada, pindahkan posisi ke koordinat terakhir
+                            customerMap.setView([initialLat, initialLng], 14);
+                            customerMarker.setLatLng([initialLat, initialLng]);
+                        }
+
+                        // PENTING: Memaksa peta Leaflet merender ulang ukurannya agar tidak bug/blank kotak abu-abu
+                        customerMap.invalidateSize();
+                    }, 150);
+                }
+            </script>
         </div>
     </div>
 </x-app-layout>

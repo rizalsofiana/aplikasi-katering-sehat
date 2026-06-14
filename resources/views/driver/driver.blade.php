@@ -31,30 +31,47 @@
 
                 <div class="space-y-3">
                     @forelse($availableDeliveries as $deliv)
-                        <div
-                            class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                            <div class="space-y-1">
-                                <span
-                                    class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-100 uppercase tracking-wider">
-                                    {{ $deliv->status }}
-                                </span>
-                                <h5 class="font-bold text-slate-800 text-sm mt-1">{{ $deliv->menu->name }}</h5>
-                                <p class="text-xs text-slate-400">📅
-                                    {{ \Carbon\Carbon::parse($deliv->delivery_date)->format('d M Y') }} | 🕒 Waktu:
-                                    <span class="font-semibold text-slate-700">{{ ucfirst($deliv->meal_time) }}</span>
-                                </p>
-                            </div>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-4">
 
-                            <div>
+                            <div class="flex items-start justify-between">
+                                <div class="space-y-1">
+                                    <span
+                                        class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-100 uppercase tracking-wider">
+                                        {{ $deliv->status }}
+                                    </span>
+                                    <h5 class="font-bold text-slate-800 text-sm mt-1">{{ $deliv->menu->name }}</h5>
+                                    <p class="text-xs text-slate-400">📅
+                                        {{ \Carbon\Carbon::parse($deliv->delivery_date)->format('d M Y') }} | 🕒
+                                        {{ ucfirst($deliv->meal_time) }}</p>
+                                </div>
+
                                 <form action="{{ route('deliveries.take', $deliv->id) }}" method="POST">
                                     @csrf
                                     @method('PATCH')
                                     <button type="submit"
-                                        class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2 px-4 rounded-xl transition shadow-sm">
+                                        class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2 px-4 rounded-xl transition shadow-sm whitespace-nowrap">
                                         Ambil Tugas ➔
                                     </button>
                                 </form>
                             </div>
+
+                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs space-y-1.5">
+                                <p class="text-slate-600"><span class="font-bold text-slate-800">👤 Tujuan:</span>
+                                    {{ $deliv->order->user->name ?? 'Customer' }}</p>
+                                <p class="text-slate-600"><span class="font-bold text-slate-800">📍 Alamat:</span>
+                                    {{ $deliv->delivery_address ?? 'Alamat belum diatur' }}</p>
+                                @if ($deliv->latitude && $deliv->longitude)
+                                    <button type="button"
+                                        onclick="viewDriverMap('{{ $deliv->latitude }}', '{{ $deliv->longitude }}', '{{ $deliv->order->user->name ?? 'Customer' }}')"
+                                        class="mt-2 inline-flex items-center space-x-1.5 bg-sky-500 hover:bg-sky-600 text-white font-bold px-2.5 py-1.5 rounded-lg transition text-[11px] shadow-sm">
+                                        <span>🗺️ Lihat Peta Lokasi Pengantaran</span>
+                                    </button>
+                                @else
+                                    <p class="text-[10px] text-amber-500 italic mt-1">⚠️ Customer tidak menandai peta
+                                    </p>
+                                @endif
+                            </div>
+
                         </div>
                     @empty
                         <div
@@ -76,7 +93,8 @@
                 <div class="space-y-3">
                     @forelse($myDeliveries as $myDeliv)
                         <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-4">
-                            <div class="flex items-center justify-between">
+
+                            <div class="flex items-start justify-between">
                                 <div>
                                     <h5 class="font-bold text-slate-800 text-sm">{{ $myDeliv->menu->name }}</h5>
                                     <p class="text-xs text-slate-400">Kirim:
@@ -93,7 +111,7 @@
                                     @elseif($myDeliv->status == 'cooking')
                                         <span
                                             class="bg-amber-50 text-amber-700 border border-amber-100 text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider">🍳
-                                            Dapur: Cooking</span>
+                                            Cooking</span>
                                     @elseif($myDeliv->status == 'delivered')
                                         <span
                                             class="bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider">✓
@@ -104,6 +122,30 @@
                                             Ready Pickup</span>
                                     @endif
                                 </div>
+                            </div>
+
+                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs space-y-1.5">
+                                <p class="text-slate-600"><span class="font-bold text-slate-800">👤 Penerima:</span>
+                                    {{ $myDeliv->order->user->name ?? 'Customer' }}</p>
+                                <p class="text-slate-600"><span class="font-bold text-slate-800">📍 Alamat
+                                        Lengkap:</span> {{ $myDeliv->delivery_address ?? 'Alamat belum diatur' }}</p>
+
+                                @if ($myDeliv->latitude && $myDeliv->longitude)
+                                    <button type="button"
+                                        onclick="viewDriverMap('{{ $myDeliv->latitude }}', '{{ $myDeliv->longitude }}', '{{ $myDeliv->order->user->name ?? 'Customer' }}')"
+                                        class="mt-2 inline-flex items-center space-x-1.5 bg-sky-500 hover:bg-sky-600 text-white font-bold px-2.5 py-1.5 rounded-lg transition text-[11px] shadow-sm">
+                                        <span>🗺️ Lihat Peta Lokasi Pengantaran</span>
+                                    </button>
+                                @else
+                                    <p class="text-[10px] text-amber-500 italic mt-1">⚠️ Customer tidak menandai peta
+                                    </p>
+                                @endif
+
+                                @if ($myDeliv->notes)
+                                    <p class="text-slate-600"><span class="font-bold text-slate-800">📝 Catatan:</span>
+                                        <span class="italic text-amber-600">{{ $myDeliv->notes }}</span>
+                                    </p>
+                                @endif
                             </div>
 
                             <div class="pt-3 border-t border-slate-50 flex justify-end">
@@ -118,29 +160,33 @@
                                         </button>
                                     </form>
                                 @elseif($myDeliv->status == 'on_the_way')
-                                    <form action="{{ route('deliveries.delivered', $myDeliv->id) }}" method="POST"
-                                        onsubmit="return confirm('Konfirmasi bahwa makanan telah diterima oleh customer?')">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit"
-                                            class="bg-emerald-600 hover:bg-emerald-700 me-1 text-white font-bold text-xs py-1.5 px-3 rounded-xl transition shadow-md shadow-emerald-100 flex items-center space-x-1">
-                                            <span>✓ Selesai Diantar (Set Delivered)</span>
-                                        </button>
-                                    </form>
-                                    <form action="{{ route('deliveries.failed', $myDeliv->id) }}" method="POST"
-                                        onsubmit="return confirm('Konfirmasi bahwa makanan batal diantarkan?')">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit"
-                                            class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs py-1.5 px-3 rounded-xl transition shadow-md shadow-emerald-100 flex items-center space-x-1">
-                                            <span>x Batalkan (Set Failed)</span>
-                                        </button>
-                                    </form>
+                                    <div class="flex space-x-2 w-full justify-end">
+                                        <form action="{{ route('deliveries.failed', $myDeliv->id) }}" method="POST"
+                                            onsubmit="return confirm('Konfirmasi bahwa makanan batal diantarkan?')">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button type="submit"
+                                                class="bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-600 font-bold text-xs py-1.5 px-3 rounded-xl transition flex items-center">
+                                                <span>✕ Gagal</span>
+                                            </button>
+                                        </form>
+
+                                        <form action="{{ route('deliveries.delivered', $myDeliv->id) }}" method="POST"
+                                            onsubmit="return confirm('Konfirmasi bahwa makanan telah diterima oleh customer?')">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button type="submit"
+                                                class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-1.5 px-3 rounded-xl transition shadow-md shadow-emerald-100 flex items-center">
+                                                <span>✓ Selesai Diantar</span>
+                                            </button>
+                                        </form>
+                                    </div>
                                 @else
                                     <span class="text-xs font-semibold text-slate-400 italic">Pengiriman Selesai
                                         ✨</span>
                                 @endif
                             </div>
+
                         </div>
                     @empty
                         <div
@@ -152,6 +198,73 @@
             </div>
 
         </div>
-
     </div>
+    <div id="driverMapModal"
+        class="fixed inset-0 z-50 overflow-y-auto hidden items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-5 space-y-4 shadow-xl border border-slate-100">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                <h3 class="font-bold text-slate-900 text-sm flex items-center space-x-1">
+                    <span>📍 Lokasi Pengantaran:</span>
+                    <span id="driver_map_title" class="text-sky-600 font-extrabold"></span>
+                </h3>
+                <button onclick="closeDriverMap()"
+                    class="text-slate-400 hover:text-slate-600 font-bold text-lg">&times;</button>
+            </div>
+
+            <div id="driver_map_container" class="w-full h-72 rounded-xl border border-slate-200 z-0"></div>
+
+            <div class="flex space-x-2">
+                <button type="button" onclick="closeDriverMap()"
+                    class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 rounded-xl text-xs transition">
+                    Kembali
+                </button>
+                <a id="google_maps_redirect" href="#" target="_blank"
+                    class="w-2/3 text-center bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 rounded-xl text-xs transition block shadow-sm shadow-sky-100">
+                    🚀 Buka di Google Maps HP
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let driverMap, driverMarker;
+
+        function viewDriverMap(lat, lng, customerName) {
+            // Tampilkan judul nama penerima di modal
+            document.getElementById('driver_map_title').innerText = customerName;
+
+            // Buat link pintas ke google maps aplikasi
+            document.getElementById('google_maps_redirect').href =
+                `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+
+            // Munculkan Modal Element
+            const modal = document.getElementById('driverMapModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            // Render Peta Leaflet
+            setTimeout(() => {
+                if (!driverMap) {
+                    driverMap = L.map('driver_map_container').setView([lat, lng], 16);
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap'
+                    }).addTo(driverMap);
+
+                    driverMarker = L.marker([lat, lng]).addTo(driverMap);
+                } else {
+                    // Jika peta sudah dimuat sebelumnya, cukup ganti titik fokusnya saja
+                    driverMap.setView([lat, lng], 16);
+                    driverMarker.setLatLng([lat, lng]);
+                }
+
+                // Fix bug render peta kotak abu-abu di dalam modal hiddens
+                driverMap.invalidateSize();
+            }, 150);
+        }
+
+        function closeDriverMap() {
+            document.getElementById('driverMapModal').classList.add('hidden');
+        }
+    </script>
 </x-app-layout>

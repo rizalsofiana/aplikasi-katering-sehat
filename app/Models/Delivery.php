@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['menu_id', 'driver_id', 'delivery_date', 'meal_time', 'delivery_address', 'status', 'notes'])]
+#[Fillable(['order_id', 'menu_id', 'driver_id', 'delivery_date', 'meal_time', 'delivery_address', 'latitude', 'longitude', 'status', 'notes'])]
 class Delivery extends Model
 {
     public function menu()
@@ -16,5 +16,10 @@ class Delivery extends Model
     public function driver()
     {
         return $this->belongsTo(User::class, 'driver_id');
+    }
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
     }
 }

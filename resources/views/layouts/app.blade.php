@@ -11,6 +11,8 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -111,7 +113,8 @@
                         <span class="font-black text-lg ml-2 text-slate-900">KateringSehat<span
                                 class="text-emerald-600">.AI</span></span>
                     </div>
-                    <button @click="sidebarOpen = false" class="text-slate-400 hover:text-slate-600 focus:outline-none">
+                    <button @click="sidebarOpen = false"
+                        class="text-slate-400 hover:text-slate-600 focus:outline-none">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M6 18L18 6M6 6l12 12" />
