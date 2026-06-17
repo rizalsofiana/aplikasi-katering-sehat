@@ -75,6 +75,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('customer.subscriptions.index');
         Route::get('/subscriptions/checkout/{package}', [SubscriptionController::class, 'checkout'])->name('customer.subscriptions.checkout');
         Route::post('/subscriptions/purchase', [SubscriptionController::class, 'store'])->name('customer.subscriptions.store');
+
+        Route::get('/order/{order}/payment', [OrderController::class, 'payment'])->name('customer.orders.payment');
+
+        // Route Webhook Callback dari Midtrans (Wajib di luar middleware auth/csrf jika bisa)
+        Route::post('/midtrans/callback', [OrderController::class, 'callback'])->name('midtrans.callback');
     });
 
 

@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('deliveries', function (Blueprint $table) {
-            $table->foreignId('order_id')->nullable()->after('id')->constrained('orders')->onDelete('cascade');
+        Schema::table('orders', function (Blueprint $table) {
+            $table->string('snap_token')->nullable()->after('status');
         });
     }
 
@@ -21,9 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('deliveries', function (Blueprint $table) {
-            $table->dropForeign(['order_id']);
-            $table->dropColumn('order_id');
+        Schema::table('orders', function (Blueprint $table) {
+            //
         });
     }
 };

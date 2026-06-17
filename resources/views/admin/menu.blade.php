@@ -52,6 +52,15 @@
                             class="block w-full rounded-xl border-slate-200 text-sm focus:border-emerald-500 focus:ring-emerald-500 shadow-sm">{{ old('description') }}</textarea>
                     </div>
 
+                    <div>
+                        <label
+                            class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Harga</label>
+                        <input type="number" step="0.01" name="price" value="{{ old('price') }}"
+                            placeholder="0.00"
+                            class="block w-full rounded-xl border-slate-200 text-sm focus:border-emerald-500 focus:ring-emerald-500 shadow-sm"
+                            required>
+                    </div>
+
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Energi /
@@ -77,6 +86,15 @@
                                 </option>
                             </select>
                         </div>
+                    </div>
+
+                    <div>
+                        <label
+                            class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Harga</label>
+                        <input type="number" step="0.01" name="price" value="{{ old('price') }}"
+                            placeholder="0.00"
+                            class="block w-full rounded-xl border-slate-200 text-sm focus:border-emerald-500 focus:ring-emerald-500 shadow-sm"
+                            required>
                     </div>
 
                     <div class="grid grid-cols-3 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
@@ -127,8 +145,8 @@
                             <tr
                                 class="bg-slate-50 text-slate-400 text-xs font-bold uppercase border-b border-slate-100">
                                 <th class="py-4 px-6">Nama Menu</th>
-                                <th class="py-4 px-6">Status</th>
                                 <th class="py-4 px-6">Nilai Gizi Makro</th>
+                                <th class="py-4 px-6">Harga</th>
                                 <th class="py-4 px-6 text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -136,25 +154,20 @@
                             @forelse($menus as $menu)
                                 <tr class="hover:bg-slate-50/50 transition">
                                     <td class="py-4 px-6">
-                                        <p class="font-bold text-slate-900">{{ $menu->name }}</p>
+                                        <p class="font-bold text-slate-900">{{ $menu->name }}
+                                            <span
+                                                class="text-xs {{ $menu->is_available ? 'text-green-600' : 'text-red-600' }} ml-1">({{ $menu->is_available ? 'Ready' : 'Kosong' }})</span>
+                                        </p>
                                         <p class="text-xs text-slate-400 truncate max-w-[220px]">
                                             {{ $menu->description ?? 'Tidak ada deskripsi.' }}
                                         </p>
-                                    </td>
-                                    <td class="py-4 px-6">
-                                        @if ($menu->is_available)
-                                            <span
-                                                class="text-[11px] font-bold bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-md">Ready</span>
-                                        @else
-                                            <span
-                                                class="text-[11px] font-bold bg-rose-50 text-rose-700 px-2.5 py-1 rounded-md">Kosong</span>
-                                        @endif
                                     </td>
                                     <td class="py-4 px-6 text-xs text-slate-600">
                                         @if ($menu->nutrition)
                                             <p class="font-bold text-slate-900">{{ $menu->nutrition->calories }} kkal
                                             </p>
-                                            <p class="text-slate-400 mt-0.5">P: {{ $menu->nutrition->protein_g }}g | K:
+                                            <p class="text-slate-400 mt-0.5">P: {{ $menu->nutrition->protein_g }}g |
+                                                K:
                                                 {{ $menu->nutrition->carbs_g }}g | L: {{ $menu->nutrition->fat_g }}g
                                             </p>
                                         @else
@@ -163,12 +176,17 @@
                                         @endif
                                     </td>
                                     <td class="py-4 px-6">
+                                        <p class="font-bold text-slate-900">Rp
+                                            {{ number_format($menu->price, 0, ',', '.') }}
+                                        </p>
+                                    <td class="py-4 px-6">
                                         <div class="flex items-center justify-center space-x-3">
                                             <button
                                                 @click="
                                                     editUrl = '{{ route('admin.menu.update', $menu->id) }}';
                                                     menuData.name = '{{ addslashes($menu->name) }}';
                                                     menuData.description = '{{ addslashes($menu->description) }}';
+                                                    menuData.price = '{{ $menu->price }}';
                                                     menuData.calories = '{{ $menu->nutrition->calories ?? 0 }}';
                                                     menuData.protein_g = '{{ $menu->nutrition->protein_g ?? 0 }}';
                                                     menuData.carbs_g = '{{ $menu->nutrition->carbs_g ?? 0 }}';
@@ -180,7 +198,8 @@
                                                 Edit
                                             </button>
 
-                                            <form action="{{ route('admin.menu.destroy', $menu->id) }}" method="POST"
+                                            <form action="{{ route('admin.menu.destroy', $menu->id) }}"
+                                                method="POST"
                                                 onsubmit="return confirm('Hapus menu ini beserta data gizinya?')">
                                                 @csrf
                                                 @method('DELETE')
@@ -194,7 +213,8 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="py-8 text-center text-sm text-slate-400 italic">Belum ada
+                                    <td colspan="4" class="py-8 text-center text-sm text-slate-400 italic">Belum
+                                        ada
                                         menu makanan diet yang terdaftar.</td>
                                 </tr>
                             @endforelse
@@ -245,6 +265,14 @@
                                 / Komposisi</label>
                             <textarea name="description" rows="2" x-model="menuData.description"
                                 class="block w-full rounded-xl border-slate-200 text-sm focus:border-emerald-500 focus:ring-emerald-500 shadow-sm"></textarea>
+                        </div>
+
+                        <div>
+                            <label
+                                class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Harga</label>
+                            <input type="number" step="0.01" name="price" x-model="menuData.price"
+                                class="block w-full rounded-xl border-slate-200 text-sm focus:border-emerald-500 focus:ring-emerald-500 shadow-sm"
+                                required>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">

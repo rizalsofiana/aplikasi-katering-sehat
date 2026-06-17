@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['user_id', 'invoice_number', 'total_amount', 'status'])]
+#[Fillable(['user_id', 'invoice_number', 'total_amount', 'status', 'snap_token'])]
 #[Table('orders')]
 class Order extends Model
 {

@@ -1,10 +1,20 @@
 <x-app-layout>
     <div x-data="{
         cart: [],
+        isLoading: false,
+        openMapModal: false,
+        lat: '',
+        lng: '',
+    
         addMenu(id, name, price, calories) {
             let item = this.cart.find(i => i.id === id);
-            if (item) { item.qty++; } else { this.cart.push({ id: id, name: name, price: price, calories: calories, qty: 1 }); }
+            if (item) {
+                item.qty++;
+            } else {
+                this.cart.push({ id: id, name: name, price: Number(price), calories: calories, qty: 1 });
+            }
         },
+    
         removeMenu(id) {
             let item = this.cart.find(i => i.id === id);
             if (item) {
@@ -12,8 +22,58 @@
                 if (item.qty <= 0) { this.cart = this.cart.filter(i => i.id !== id); }
             }
         },
+    
         get totalPrice() { return this.cart.reduce((sum, item) => sum + (item.price * item.qty), 0); },
-        get totalCalories() { return this.cart.reduce((sum, item) => sum + (item.calories * item.qty), 0); }
+        get totalCalories() { return this.cart.reduce((sum, item) => sum + (item.calories * item.qty), 0); },
+    
+        async processOrder() {
+            if (this.cart.length === 0) return;
+            this.isLoading = true;
+    
+            const formData = new FormData(document.getElementById('order-form'));
+            formData.append('cart_data', JSON.stringify(this.cart));
+            formData.append('latitude', this.lat);
+            formData.append('longitude', this.lng);
+    
+            try {
+                let response = await fetch('{{ route('customer.orders.store') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+    
+                let result = await response.json();
+    
+                if (response.ok && result.snap_token) {
+                    window.snap.pay(result.snap_token, {
+                        onSuccess: function(statusResult) {
+                            window.location.href = '{{ route('customer.orders.index') }}?status=success';
+                        },
+                        onPending: function(statusResult) {
+                            window.location.href = '{{ route('customer.orders.index') }}?status=pending';
+                        },
+                        onError: function(statusResult) {
+                            alert('Pembayaran gagal, silakan coba lagi dari riwayat pesanan.');
+                            window.location.reload();
+                        },
+                        onClose: function() {
+                            alert('Anda menutup halaman pembayaran. Pesanan Anda tersimpan sebagai pending.');
+                            window.location.reload();
+                        }
+                    });
+                } else {
+                    alert(result.message || 'Terjadi kesalahan sistem.');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Gagal memproses pesanan.');
+            } finally {
+                this.isLoading = false;
+            }
+        }
     }" class="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
 
         <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
@@ -56,9 +116,11 @@
                         </div>
 
                         <div class="flex items-center justify-between pt-2 border-t border-slate-50">
-                            <span class="font-black text-slate-900 text-sm">Rp 35.000</span>
+                            <span class="font-black text-slate-900 text-sm">
+                                Rp {{ number_format($menu->price, 0, ',', '.') }}
+                            </span>
                             <button
-                                @click="addMenu({{ $menu->id }}, '{{ addslashes($menu->name) }}', 35000, {{ $menu->nutrition->calories ?? 0 }})"
+                                @click="addMenu({{ $menu->id }}, '{{ addslashes($menu->name) }}', {{ $menu->price }}, {{ $menu->nutrition->calories ?? 0 }})"
                                 class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-1.5 px-3 rounded-xl transition">
                                 + Tambah
                             </button>
@@ -73,8 +135,7 @@
             </div>
 
             <div id="cart-container"
-                class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4 sticky top-6"
-                x-data="{ openMapModal: false, lat: '', lng: '' }">
+                class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4 sticky top-6">
 
                 <h4
                     class="font-bold text-slate-900 text-base border-b border-slate-100 pb-2 flex items-center justify-between">
@@ -122,7 +183,7 @@
                     </div>
                 </div>
 
-                <form action="{{ route('customer.orders.store') }}" method="POST">
+                <form id="order-form" @submit.prevent="processOrder">
                     @csrf
                     <input type="hidden" name="cart_data" :value="JSON.stringify(cart)">
 
@@ -166,9 +227,12 @@
                         </div>
                     </div>
 
-                    <button type="submit" :disabled="cart.length === 0"
+                    <button type="submit" :disabled="cart.length === 0 || isLoading"
                         class="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:cursor-not-allowed text-white font-bold py-2.5 px-4 rounded-xl transition text-xs shadow-md shadow-emerald-100">
-                        Amankan & Proses Pesanan
+                        <span x-show="!isLoading">Amankan & Proses Pesanan</span>
+                        <span x-show="isLoading" class="flex items-center justify-center space-x-2">
+                            ⏳ Memproses Transaksi...
+                        </span>
                     </button>
                 </form>
 

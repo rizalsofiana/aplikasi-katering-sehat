@@ -21,6 +21,7 @@ class MenuController extends Controller
             // Validasi Menu Utama
             'name'          => 'required|string|max:255',
             'description'   => 'nullable|string',
+            'price'         => 'required|numeric|min:0',
             'image'         => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Maksimal 2MB
             'is_available'  => 'required|boolean',
 
@@ -46,6 +47,7 @@ class MenuController extends Controller
                 'description'  => $request->description,
                 'image_path'   => $imagePath,
                 'is_available' => $request->is_available,
+                'price'        => $request->price,
             ]);
 
             // B. Simpan ke tabel `menu_nutritions` memanfaatkan relasi hasOne Eloquent
@@ -66,11 +68,12 @@ class MenuController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'price' => 'required|numeric|min:0',
             'calories' => 'required|integer|min:0',
             'protein_g' => 'required|numeric|min:0',
             'carbs_g' => 'required|numeric|min:0',
             'fat_g' => 'required|numeric|min:0',
-            'is_available' => 'required|     ',
+            'is_available' => 'required|boolean',
         ]);
 
         $menu = Menu::findOrFail($id);
@@ -79,6 +82,7 @@ class MenuController extends Controller
             $menu->update([
                 'name' => $request->name,
                 'description' => $request->description,
+                'price' => $request->price,
                 'is_available' => $request->is_available,
             ]);
 

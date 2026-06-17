@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Midtrans\Config;
+use Midtrans\Snap;
 
 class OrderController extends Controller
 {
@@ -37,13 +39,13 @@ class OrderController extends Controller
             return redirect()->back()->with('error', 'Keranjang belanja Anda kosong!');
         }
 
-        // Kalkulasi total bayar (Asumsi harga per menu Rp 35.000, sesuaikan dengan sistem Anda)
         $totalAmount = 0;
         foreach ($cartItems as $item) {
-            $totalAmount += (35000 * $item['qty']);
+            $totalAmount += ($item['price'] * $item['qty']);
         }
 
-        DB::transaction(function () use ($request, $cartItems, $totalAmount) {
+        // 🟢 Ubah closure agar me-return data $order keluar dari DB Transaction
+        $order = DB::transaction(function () use ($request, $cartItems, $totalAmount) {
 
             $order = Order::create([
                 'user_id' => Auth::id(),
@@ -52,33 +54,73 @@ class OrderController extends Controller
                 'status' => 'pending',
             ]);
 
-            // 2. Loop item untuk disimpan ke order_items dan didaftarkan ke jadwal delivery
             foreach ($cartItems as $item) {
-
                 $order->items()->create([
                     'menu_id' => $item['id'],
                     'quantity' => $item['qty']
                 ]);
 
-                // PENTING: Otomatis daftarkan ke logistik kurir (Tabel Deliveries) sebanyak Qty yang dibeli
                 for ($i = 0; $i < $item['qty']; $i++) {
                     Delivery::create([
                         'order_id'        => $order->id,
                         'menu_id'         => $item['id'],
-                        'driver_id'       => null, // Nanti di-plot oleh admin
+                        'driver_id'       => null,
                         'delivery_date'   => $request->delivery_date,
                         'delivery_address' => $request->delivery_address,
                         'latitude'        => $request->latitude ?? null,
                         'longitude'       => $request->longitude ?? null,
                         'meal_time'       => $request->meal_time,
-                        'status'          => 'cooking',
+                        'status'          => 'cooking', // 💡 Disarankan default 'pending_payment' sampai lunas
                         'notes'           => null,
                     ]);
                 }
             }
+
+            return $order; // Kembalikan data order
         });
 
-        return redirect()->route('customer.orders.index')->with('success', 'Pesanan makanan berhasil dibeli dan jadwal delivery kurir telah dibuat!');
+        // ================= 🟢 INTEGRASI MIDTRANS SNAP =================
+        Config::$serverKey = config('midtrans.server_key');
+        Config::$isProduction = config('midtrans.is_production');
+        Config::$isSanitized = config('midtrans.is_sanitized');
+        Config::$is3ds = config('midtrans.is_3ds');
+
+        $params = [
+            'transaction_details' => [
+                'order_id' => $order->invoice_number, // Gunakan nomor invoice unik Anda
+                'gross_amount' => (int) $order->total_amount,
+            ],
+            'customer_details' => [
+                'first_name' => Auth::user()->name,
+                'email' => Auth::user()->email,
+            ],
+        ];
+
+        try {
+            // Minta Snap Token dari Midtrans
+            $snapToken = Snap::getSnapToken($params);
+
+            // Simpan token ke database orders
+            $order->update(['snap_token' => $snapToken]);
+
+            // Alihkan customer ke halaman pembayaran khusus beserta ID ordernya
+            return response()->json([
+                'snap_token' => $snapToken,
+                'order_id' => $order->id
+            ]);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal terhubung ke sistem pembayaran: ' . $e->getMessage());
+        }
+    }
+
+    public function payment(Order $order)
+    {
+        // Pastikan hanya pemilik order yang bisa melihat halaman ini
+        if ($order->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        return view('customer.orders.payment', compact('order'));
     }
 
     public function adminIndex()
