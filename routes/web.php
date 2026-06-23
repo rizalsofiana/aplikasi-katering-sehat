@@ -7,6 +7,9 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\UserController;
+use App\Models\Delivery;
+use App\Models\Subscription;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -28,7 +31,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return redirect()->route('deliveries.index');
         }
 
-        return view('customer.customer', compact('profile'));
+        $todayDeliveries = Delivery::whereHas('order', function ($query) use ($user) {
+            $query->where('user_id', $user->id); // Cukup tulis 'user_id' saja
+        })->whereDate('delivery_date', Carbon::today('Asia/Jakarta'))->with('menu')->where('status', '!=', 'delivered')->get();
+
+        $currentSubscription = Subscription::where('user_id', $user->id)
+            ->with('package')
+            ->latest() // Mengambil data order langganan terakhir
+            ->first();
+        // dd($todayDeliveries);
+
+        return view('customer.customer', compact('profile', 'todayDeliveries', 'currentSubscription'));
     })->name('dashboard');
 
     Route::post('/user-profile/store', [ProfileController::class, 'store'])->name('profile.store');

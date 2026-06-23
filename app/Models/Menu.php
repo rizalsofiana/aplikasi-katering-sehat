@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['name', 'description', 'price', 'image_path', 'is_available'])]
+#[Fillable(['name', 'description', 'price', 'image_path', 'is_available', 'stock'])]
 #[Table('menus')]
 class Menu extends Model
 {

@@ -5,6 +5,7 @@
         openMapModal: false,
         lat: '',
         lng: '',
+        search: '',
     
         addMenu(id, name, price, calories) {
             let item = this.cart.find(i => i.id === id);
@@ -76,10 +77,22 @@
         }
     }" class="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
 
-        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-            <h3 class="text-xl font-bold text-slate-900">Katering Sehat & Penyedia Menu Diet 🍲</h3>
-            <p class="text-sm text-slate-500 mt-0.5">Silakan pilih makanan sehat harian Anda. Sistem kasir otomatis
-                mengkalkulasi zat gizi makro Anda.</p>
+        <div
+            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <h3 class="text-xl font-bold text-slate-900">Katering Sehat & Penyedia Menu Diet 🍲</h3>
+                <p class="text-sm text-slate-500 mt-0.5">Silakan pilih makanan sehat harian Anda. Sistem kasir otomatis
+                    mengkalkulasi zat gizi makro Anda.</p>
+            </div>
+
+            <div class="w-full md:w-72">
+                <div class="relative">
+                    <span
+                        class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400 text-xs">🔍</span>
+                    <input type="text" x-model="search" placeholder="Cari menu diet Anda..."
+                        class="w-full pl-9 pr-4 py-2 text-xs rounded-xl border-slate-200 focus:border-emerald-500 focus:ring-emerald-500 shadow-sm placeholder:text-slate-400">
+                </div>
+            </div>
         </div>
 
         @if (session('success'))
@@ -93,7 +106,7 @@
 
             <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 @forelse($menus as $menu)
-                    <div
+                    <div x-show="search === '' || '{{ strtolower(addslashes($menu->name)) }}'.includes(search.toLowerCase())"
                         class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex flex-col justify-between space-y-4 hover:shadow-md transition">
                         <div class="space-y-2">
                             <div class="flex items-center justify-between">
@@ -108,20 +121,23 @@
                             @if ($menu->nutrition)
                                 <div
                                     class="grid grid-cols-3 gap-1 bg-slate-50 p-2 rounded-xl text-[11px] text-slate-500 text-center font-semibold">
-                                    <div>P: <span class="text-slate-800">{{ $menu->nutrition->protein_g }}g</span></div>
-                                    <div>K: <span class="text-slate-800">{{ $menu->nutrition->carbs_g }}g</span></div>
-                                    <div>L: <span class="text-slate-800">{{ $menu->nutrition->fat_g }}g</span></div>
+                                    <div>Protein: <span class="text-slate-800">{{ $menu->nutrition->protein_g }}g</span>
+                                    </div>
+                                    <div>Kalori: <span class="text-slate-800">{{ $menu->nutrition->carbs_g }}g</span>
+                                    </div>
+                                    <div>Lemak: <span class="text-slate-800">{{ $menu->nutrition->fat_g }}g</span>
+                                    </div>
                                 </div>
                             @endif
                         </div>
 
                         <div class="flex items-center justify-between pt-2 border-t border-slate-50">
                             <span class="font-black text-slate-900 text-sm">
-                                Rp {{ number_format($menu->price, 0, ',', '.') }}
+                                Rp {{ number_format($menu->price, 0, ',', '.') }} (Stok: {{ $menu->stock }} Porsi)
                             </span>
-                            <button
+                            <button @if ($menu->stock <= 0) disabled @endif
                                 @click="addMenu({{ $menu->id }}, '{{ addslashes($menu->name) }}', {{ $menu->price }}, {{ $menu->nutrition->calories ?? 0 }})"
-                                class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-1.5 px-3 rounded-xl transition">
+                                class="bg-slate-900 hover:bg-slate-800 {{ $menu->stock <= 0 ? 'opacity-50 cursor-not-allowed' : '' }} text-white font-bold text-xs py-1.5 px-3 rounded-xl transition">
                                 + Tambah
                             </button>
                         </div>
@@ -202,7 +218,7 @@
                         <div>
                             <label
                                 class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Alamat
-                                Alamat</label>
+                                Pengiriman</label>
                             <textarea name="delivery_address" placeholder="Masukkan alamat disini..."
                                 class="block w-full rounded-xl border-slate-200 text-xs mb-2" required></textarea>
 
@@ -220,9 +236,9 @@
                                 class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Waktu
                                 Makan (*Meal Time*)</label>
                             <select name="meal_time" class="block w-full rounded-xl border-slate-200 text-xs" required>
-                                <option value="breakfast">Sarapan (Pagi)</option>
-                                <option value="lunch">Makan Siang</option>
-                                <option value="dinner">Makan Malam</option>
+                                <option value="breakfast">Sarapan (07:00 - 09:00)</option>
+                                <option value="lunch">Makan Siang (12:00 - 14:00)</option>
+                                <option value="dinner">Makan Malam (18:00 - 20:00)</option>
                             </select>
                         </div>
                     </div>

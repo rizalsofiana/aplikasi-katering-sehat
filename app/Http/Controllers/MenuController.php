@@ -24,6 +24,7 @@ class MenuController extends Controller
             'price'         => 'required|numeric|min:0',
             'image'         => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Maksimal 2MB
             'is_available'  => 'required|boolean',
+            'stock'         => 'required|integer|min:0',
 
             // Validasi Nutrisi Gizi
             'calories'      => 'required|integer|min:0',
@@ -48,6 +49,7 @@ class MenuController extends Controller
                 'image_path'   => $imagePath,
                 'is_available' => $request->is_available,
                 'price'        => $request->price,
+                'stock'        => $request->stock,
             ]);
 
             // B. Simpan ke tabel `menu_nutritions` memanfaatkan relasi hasOne Eloquent
@@ -74,6 +76,7 @@ class MenuController extends Controller
             'carbs_g' => 'required|numeric|min:0',
             'fat_g' => 'required|numeric|min:0',
             'is_available' => 'required|boolean',
+            'stock' => 'required|integer|min:0',
         ]);
 
         $menu = Menu::findOrFail($id);
@@ -84,6 +87,7 @@ class MenuController extends Controller
                 'description' => $request->description,
                 'price' => $request->price,
                 'is_available' => $request->is_available,
+                'stock' => $request->stock,
             ]);
 
             $menu->nutrition()->updateOrCreate(

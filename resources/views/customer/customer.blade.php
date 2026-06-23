@@ -49,36 +49,108 @@
                     </div>
                 </div>
 
-                <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex flex-col justify-between">
-                    <div class="flex justify-between items-center">
-                        <span class="text-sm font-medium text-gray-500">Antaran Hari Ini</span>
-                        <span class="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">Logistik</span>
-                    </div>
-                    <div class="mt-4">
-                        <h4 class="text-lg font-bold text-gray-800 truncate">Menu Belum Dipilih</h4>
-                        <div class="flex mt-1 text-amber-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                class="bi bi-exclamation-triangle" viewBox="0 0 16 16">
-                                <path
-                                    d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.15.15 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.2.2 0 0 1-.054.06.1.1 0 0 1-.066.017H1.146a.1.1 0 0 1-.066-.017.2.2 0 0 1-.054-.06.18.18 0 0 1 .002-.183L7.884 2.073a.15.15 0 0 1 .054-.057m1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767z" />
-                                <path
-                                    d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z" />
-                            </svg>
-                            <p class="text-xs font-medium ms-2"> Silakan order menu terlebih dahulu</p>
+                @if ($todayDeliveries->isEmpty())
+                    <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex flex-col justify-between">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium text-gray-500">Antaran Hari Ini</span>
+                            <span
+                                class="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">Logistik</span>
+                        </div>
+                        <div class="mt-4">
+                            <h4 class="text-lg font-bold text-gray-800 truncate">Menu Belum Dipilih</h4>
+                            <div class="flex mt-1 text-amber-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                    fill="currentColor" class="bi bi-exclamation-triangle" viewBox="0 0 16 16">
+                                    <path
+                                        d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.15.15 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.2.2 0 0 1-.054.06.1.1 0 0 1-.066.017H1.146a.1.1 0 0 1-.066-.017.2.2 0 0 1-.054-.06.18.18 0 0 1 .002-.183L7.884 2.073a.15.15 0 0 1 .054-.057m1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767z" />
+                                    <path
+                                        d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z" />
+                                </svg>
+                                <p class="text-xs font-medium ms-2"> Silakan order menu terlebih dahulu</p>
+                            </div>
                         </div>
                     </div>
-                </div>
+                @else
+                    <div class="space-y-4">
+                        @foreach ($todayDeliveries as $delivery)
+                            <div
+                                class="bg-white rounded-xl p-5 shadow-sm border border-emerald-100 flex flex-col justify-between">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-500">Antaran Hari Ini</span>
+                                    <span
+                                        class="text-[10px] font-bold text-white bg-slate-800 px-2 py-0.5 rounded uppercase tracking-wider">
+                                        {{ str_replace('_', ' ', $delivery->status) }}
+                                    </span>
+                                </div>
+                                <div class="mt-4">
+                                    <h4 class="text-lg font-bold text-gray-800 truncate">
+                                        {{ $delivery->menu->name ?? 'Menu tidak tersedia' }}</h4>
+                                    <div class="flex mt-1 text-emerald-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                            fill="currentColor" class="bi bi-check-circle-fill" viewBox="0 0 16 16">
+                                            <path
+                                                d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z" />
+                                        </svg>
+                                        <p class="text-xs font-medium ms-2">
+                                            @if ($delivery->status === 'pending')
+                                                Menunggu Pembayaran
+                                            @elseif($delivery->status === 'cooking')
+                                                Sedang Dimasak 👨‍🍳
+                                            @elseif($delivery->status === 'on_the_way')
+                                                Sedang Diperjalanan 🛵
+                                            @elseif($delivery->status === 'delivered')
+                                                Pesanan Tiba 🍽️
+                                            @else
+                                                Proses Terkendala
+                                            @endif
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
 
                 <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex flex-col justify-between">
                     <div class="flex justify-between items-center">
                         <span class="text-sm font-medium text-gray-500">Status Langganan</span>
-                        <span class="text-xs font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded">Paket</span>
+                        <span class="text-xs font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded">
+                            {{ $currentSubscription->package->package_name ?? 'Belum Berlangganan' }}
+                        </span>
                     </div>
                     <div class="mt-4">
-                        <h4 class="text-2xl font-bold text-gray-400">Tidak Aktif</h4>
-                        <a href="#" class="text-xs text-green-600 hover:underline font-semibold block mt-1">Pilih
-                            paket
-                            sehatmu →</a>
+                        @if (!$currentSubscription)
+                            <h4 class="text-2xl font-bold text-gray-400">Tidak Aktif</h4>
+                            <a href="#" class="text-xs text-green-600 hover:underline font-semibold block mt-1">
+                                Pilih paket sehatmu →
+                            </a>
+                        @else
+                            @if ($currentSubscription->status === 'active')
+                                <h4 class="text-2xl font-bold text-emerald-600">Aktif</h4>
+                                <p class="text-xs text-gray-400 block mt-1">
+                                    Hingga: <span
+                                        class="font-semibold text-gray-600">{{ \Carbon\Carbon::parse($currentSubscription->end_date)->format('d M Y') }}</span>
+                                </p>
+                            @elseif($currentSubscription->status === 'pending')
+                                <h4 class="text-2xl font-bold text-amber-500">Pending</h4>
+                                <a href="#"
+                                    class="text-xs text-amber-600 hover:underline font-semibold block mt-1">
+                                    Selesaikan pembayaran →
+                                </a>
+                            @elseif($currentSubscription->status === 'cancelled')
+                                <h4 class="text-2xl font-bold text-red-500">Dibatalkan</h4>
+                                <a href="#"
+                                    class="text-xs text-green-600 hover:underline font-semibold block mt-1">
+                                    Daftar paket baru →
+                                </a>
+                            @elseif($currentSubscription->status === 'completed')
+                                <h4 class="text-2xl font-bold text-blue-500">Selesai</h4>
+                                <a href="#"
+                                    class="text-xs text-green-600 hover:underline font-semibold block mt-1">
+                                    Perpanjang langganan →
+                                </a>
+                            @endif
+                        @endif
                     </div>
                 </div>
 

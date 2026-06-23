@@ -156,7 +156,7 @@
                                     <td class="py-4 px-6">
                                         <p class="font-bold text-slate-900">{{ $menu->name }}
                                             <span
-                                                class="text-xs {{ $menu->is_available ? 'text-green-600' : 'text-red-600' }} ml-1">({{ $menu->is_available ? 'Ready' : 'Kosong' }})</span>
+                                                class="text-xs {{ $menu->is_available && $menu->stock > 0 ? 'text-green-600' : 'text-red-600' }} ml-1">({{ $menu->is_available && $menu->stock > 0 ? 'Ready' : 'Kosong' }})</span>
                                         </p>
                                         <p class="text-xs text-slate-400 truncate max-w-[220px]">
                                             {{ $menu->description ?? 'Tidak ada deskripsi.' }}
