@@ -100,7 +100,7 @@
                 class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl text-sm font-semibold">
                 🎉 {{ session('success') }}
             </div>
-        @endif
+        @endif/
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
 
@@ -188,7 +188,7 @@
                     @if ($userProfile)
                         <div class="flex justify-between text-slate-500 border-b border-slate-200 pb-1.5">
                             <span>Target Batas Kalori Anda:</span>
-                            <span class="font-bold text-emerald-600">{{ $userProfile->daily_calorie_target ?? 2000 }}
+                            <span class="font-bold text-emerald-600">{{ $userProfile->daily_calorie_target ?? 0 }}
                                 kkal</span>
                         </div>
                     @endif
@@ -211,7 +211,8 @@
                             <label
                                 class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Tanggal
                                 Pengiriman</label>
-                            <input type="date" name="delivery_date"
+                            <input type="date" id="delivery_date"
+                                min="{{ \Carbon\Carbon::today('Asia/Jakarta')->format('Y-m-d') }}" name="delivery_date"
                                 class="block w-full rounded-xl border-slate-200 text-xs" required>
                         </div>
 
@@ -235,7 +236,9 @@
                             <label
                                 class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Waktu
                                 Makan (*Meal Time*)</label>
-                            <select name="meal_time" class="block w-full rounded-xl border-slate-200 text-xs" required>
+                            <select name="meal_time" id="meal_time"
+                                class="block w-full rounded-xl border-slate-200 text-xs" required>
+                                <option value="">-- Pilih Waktu Makan --</option>
                                 <option value="breakfast">Sarapan (07:00 - 09:00)</option>
                                 <option value="lunch">Makan Siang (12:00 - 14:00)</option>
                                 <option value="dinner">Makan Malam (18:00 - 20:00)</option>
@@ -338,6 +341,95 @@
                         customerMap.invalidateSize();
                     }, 150);
                 }
+
+                document.addEventListener('DOMContentLoaded', function() {
+                    const dateInput = document.getElementById('delivery_date');
+                    const mealSelect = document.getElementById('meal_time');
+
+                    const now = new Date();
+                    const currentHour = now.getHours();
+
+                    // =========================================================
+                    // 1. LOGIKA PEMBATASAN TANGGAL (Kunci hari ini jika > 20:00)
+                    // =========================================================
+                    let minDate = new Date(); // Ambil tanggal hari ini
+
+                    // Jika sudah jam 20:00 (8 malam) atau lebih, geser minDate ke besok harinya
+                    if (currentHour >= 20) {
+                        minDate.setDate(minDate.getDate() + 1);
+                    }
+
+                    // Format tanggal menjadi YYYY-MM-DD agar dikenali oleh HTML
+                    const year = minDate.getFullYear();
+                    const month = String(minDate.getMonth() + 1).padStart(2, '0');
+                    const day = String(minDate.getDate()).padStart(2, '0');
+                    const minDateString = `${year}-${month}-${day}`;
+
+                    // Terapkan batas minimal ke input tanggal
+                    dateInput.setAttribute('min', minDateString);
+
+                    // Mencegah bug: Jika sebelumnya input sudah terisi tanggal hari ini, 
+                    // lalu waktu berubah melewati jam 8 malam, langsung kosongkan inputnya
+                    if (dateInput.value && dateInput.value < minDateString) {
+                        dateInput.value = '';
+                    }
+
+                    // Fungsi untuk memperbarui opsi waktu makan
+                    function updateMealOptions() {
+                        if (!dateInput.value) return;
+
+                        // Ambil tanggal yang dipilih customer dan waktu saat ini
+                        const selectedDate = new Date(dateInput.value);
+                        const now = new Date();
+
+                        // 1. Kembalikan semua opsi ke keadaan normal (bisa diklik & terlihat)
+                        Array.from(mealSelect.options).forEach(opt => {
+                            opt.disabled = false;
+                            opt.hidden = false;
+                        });
+
+                        // 2. Cek apakah tanggal yang dipilih adalah HARI INI
+                        if (selectedDate.toDateString() === now.toDateString()) {
+                            const currentHour = now.getHours();
+
+                            // Aturan Batas Waktu (Bisa Anda sesuaikan jamnya)
+                            // Jika lewat jam 09:00 pagi, sembunyikan Sarapan
+                            if (currentHour >= 9) {
+                                disableOption('breakfast');
+                            }
+                            // Jika lewat jam 14:00 siang, sembunyikan Makan Siang
+                            if (currentHour >= 14) {
+                                disableOption('lunch');
+                            }
+                            // Jika lewat jam 20:00 malam, sembunyikan Makan Malam
+                            if (currentHour >= 20) {
+                                disableOption('dinner');
+                            }
+
+                            // Jika opsi yang sedang terpilih ternyata di-disable, reset select ke kosong
+                            if (mealSelect.options[mealSelect.selectedIndex].disabled) {
+                                mealSelect.value = '';
+                            }
+                        }
+                    }
+
+                    // Fungsi bantuan untuk men-disable dan menyembunyikan opsi
+                    function disableOption(value) {
+                        const option = mealSelect.querySelector(`option[value="${value}"]`);
+                        if (option) {
+                            option.disabled = true;
+                            option.hidden = true; // Menghilangkan dari daftar dropdown
+                        }
+                    }
+
+                    // Jalankan fungsi setiap kali customer mengganti tanggal
+                    if (dateInput) {
+                        dateInput.addEventListener('change', updateMealOptions);
+                    }
+
+                    // Jalankan sekali saat halaman pertama kali dimuat (jika tanggal sudah terisi)
+                    updateMealOptions();
+                });
             </script>
         </div>
     </div>

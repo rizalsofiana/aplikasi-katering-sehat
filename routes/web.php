@@ -32,14 +32,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         }
 
         $todayDeliveries = Delivery::whereHas('order', function ($query) use ($user) {
-            $query->where('user_id', $user->id); // Cukup tulis 'user_id' saja
-        })->whereDate('delivery_date', Carbon::today('Asia/Jakarta'))->with('menu')->where('status', '!=', 'delivered')->get();
+            $query->where('user_id', $user->id);
+        })->whereDate('delivery_date', Carbon::today('Asia/Jakarta'))
+            ->with('menu')
+            ->where('status', '!=', 'delivered')
+            ->latest()
+            ->limit(1)
+            ->get();
 
         $currentSubscription = Subscription::where('user_id', $user->id)
             ->with('package')
-            ->latest() // Mengambil data order langganan terakhir
+            ->latest()
             ->first();
-        // dd($todayDeliveries);
 
         return view('customer.customer', compact('profile', 'todayDeliveries', 'currentSubscription'));
     })->name('dashboard');

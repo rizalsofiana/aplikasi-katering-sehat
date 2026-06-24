@@ -39,13 +39,86 @@ class OrderController extends Controller
             return redirect()->back()->with('error', 'Keranjang belanja Anda kosong!');
         }
 
+        // =========================================================================
+        // 🟢 TAHAP 1: SIAPKAN TARGET HARIAN (PROFILE USER)
+        // =========================================================================
+        $user = Auth::user();
+        $profile = $user->profile;
+
+        // Ambil target kalori dari profil, default 2000 jika kosong
+        $dailyCalorieTarget = $profile ? $profile->daily_calorie_target : 2000;
+
+        // Kalkulasi target protein (Standar gizi: Berat badan x 1.5 gram s/d 2.0 gram)
+        // Jika data berat badan kosong, kita asumsikan butuh 60g protein/hari
+        $dailyProteinTarget = ($profile && $profile->weight_kg) ? ($profile->weight_kg * 1.5) : 60;
+
+        // =========================================================================
+        // 🟢 TAHAP 2: HITUNG NUTRISI KERANJANG BARU (Berdasarkan Database)
+        // PENTING: Jangan percaya data harga/kalori dari frontend untuk mencegah manipulasi
+        // =========================================================================
+        $menuIds = array_column($cartItems, 'id');
+        $menus = Menu::with('nutrition')->whereIn('id', $menuIds)->get()->keyBy('id');
+
+        $cartCalories = 0;
+        $cartProtein = 0;
         $totalAmount = 0;
+
         foreach ($cartItems as $item) {
-            $totalAmount += ($item['price'] * $item['qty']);
+            $menu = $menus->get($item['id']);
+            if ($menu) {
+                $totalAmount += ($menu->price * $item['qty']); // Hitung ulang total bayar murni dari DB
+
+                if ($menu->nutrition) {
+                    $cartCalories += ($menu->nutrition->calories * $item['qty']);
+                    $cartProtein += ($menu->nutrition->protein_g * $item['qty']);
+                }
+            }
         }
 
-        // 🟢 Ubah closure agar me-return data $order keluar dari DB Transaction
-        $order = DB::transaction(function () use ($request, $cartItems, $totalAmount) {
+        // =========================================================================
+        // 🟢 TAHAP 3: HITUNG HISTORI MAKANAN DI TANGGAL TERSEBUT
+        // (Mencari pesanan apa saja yang sudah dijadwalkan di hari yang sama)
+        // =========================================================================
+        $existingDeliveries = Delivery::with('menu.nutrition')
+            ->whereHas('order', function ($query) use ($user) {
+                $query->where('user_id', $user->id); // Tembus ke tabel order untuk filter user
+            })
+            ->whereDate('delivery_date', $request->delivery_date)
+            ->whereIn('status', ['cooking', 'on_the_way', 'delivered']) // Abaikan yang failed/dibatalkan
+            ->get();
+
+        $existingCalories = 0;
+        $existingProtein = 0;
+
+        foreach ($existingDeliveries as $delivery) {
+            if ($delivery->menu && $delivery->menu->nutrition) {
+                $existingCalories += $delivery->menu->nutrition->calories;
+                $existingProtein += $delivery->menu->nutrition->protein_g;
+            }
+        }
+
+
+        // =========================================================================
+        // 🟢 TAHAP 4: VALIDASI GABUNGAN & GENERATE CATATAN
+        // =========================================================================
+        $totalDayCalories = $existingCalories + $cartCalories;
+        $totalDayProtein = $existingProtein + $cartProtein;
+
+        // VALIDASI: Tolak pesanan jika membuat kalori harian jebol melebihi target
+        if ($totalDayCalories > $dailyCalorieTarget) {
+            return response()->json([
+                'message' => "TIDAK SEHAT! 🛑 Pesanan ini membuat Anda kelebihan kalori. Total konsumsi Anda pada tanggal tersebut akan menjadi {$totalDayCalories} Kkal (Melebihi target batas {$dailyCalorieTarget} Kkal). Silakan kurangi porsi."
+            ], 400); // 400 Bad Request akan memicu "alert(result.message)" di Alpine.js Anda
+        }
+
+        // Buat rangkuman nutrisi untuk disimpan sebagai jejak di logistik kurir
+        $nutritionNotes = "Gizi Harian: Kalori {$totalDayCalories}/{$dailyCalorieTarget} Kkal | Protein {$totalDayProtein}/{$dailyProteinTarget}g";
+
+
+        // =========================================================================
+        // 🟢 TAHAP 5: SIMPAN DATA KE DATABASE
+        // =========================================================================
+        $order = DB::transaction(function () use ($request, $cartItems, $totalAmount, $nutritionNotes) {
 
             $order = Order::create([
                 'user_id' => Auth::id(),
@@ -62,24 +135,31 @@ class OrderController extends Controller
 
                 for ($i = 0; $i < $item['qty']; $i++) {
                     Delivery::create([
-                        'order_id'        => $order->id,
-                        'menu_id'         => $item['id'],
-                        'driver_id'       => null,
-                        'delivery_date'   => $request->delivery_date,
+                        'order_id'         => $order->id,
+                        'menu_id'          => $item['id'],
+                        'driver_id'        => null,
+                        'delivery_date'    => $request->delivery_date,
                         'delivery_address' => $request->delivery_address,
-                        'latitude'        => $request->latitude ?? null,
-                        'longitude'       => $request->longitude ?? null,
-                        'meal_time'       => $request->meal_time,
-                        'status'          => 'cooking', // 💡 Disarankan default 'pending_payment' sampai lunas
-                        'notes'           => null,
+                        'latitude'         => $request->latitude ?? null,
+                        'longitude'        => $request->longitude ?? null,
+                        'meal_time'        => $request->meal_time,
+                        'status'           => 'cooking',
+                        'notes'            => $nutritionNotes, // 💡 Menyelipkan catatan gizi di sini
                     ]);
                 }
             }
 
-            return $order; // Kembalikan data order
+            return $order;
         });
 
-        // ================= 🟢 INTEGRASI MIDTRANS SNAP =================
+        $profile->update([
+            'daily_calorie_target' => $dailyCalorieTarget - $cartCalories, // Update sisa target kalori harian
+        ]);
+
+
+        // =========================================================================
+        // 🟢 TAHAP 6: INTEGRASI MIDTRANS SNAP
+        // =========================================================================
         Config::$serverKey = config('midtrans.server_key');
         Config::$isProduction = config('midtrans.is_production');
         Config::$isSanitized = config('midtrans.is_sanitized');
@@ -87,7 +167,7 @@ class OrderController extends Controller
 
         $params = [
             'transaction_details' => [
-                'order_id' => $order->invoice_number, // Gunakan nomor invoice unik Anda
+                'order_id' => $order->invoice_number,
                 'gross_amount' => (int) $order->total_amount,
             ],
             'customer_details' => [
@@ -97,19 +177,16 @@ class OrderController extends Controller
         ];
 
         try {
-            // Minta Snap Token dari Midtrans
             $snapToken = Snap::getSnapToken($params);
 
-            // Simpan token ke database orders
             $order->update(['snap_token' => $snapToken]);
 
-            // Alihkan customer ke halaman pembayaran khusus beserta ID ordernya
             return response()->json([
                 'snap_token' => $snapToken,
                 'order_id' => $order->id
             ]);
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal terhubung ke sistem pembayaran: ' . $e->getMessage());
+            return response()->json(['message' => 'Gagal terhubung ke gerbang pembayaran: ' . $e->getMessage()], 500);
         }
     }
 

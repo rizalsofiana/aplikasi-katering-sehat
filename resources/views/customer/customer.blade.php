@@ -92,9 +92,7 @@
                                                 d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z" />
                                         </svg>
                                         <p class="text-xs font-medium ms-2">
-                                            @if ($delivery->status === 'pending')
-                                                Menunggu Pembayaran
-                                            @elseif($delivery->status === 'cooking')
+                                            @if($delivery->status === 'cooking')
                                                 Sedang Dimasak 👨‍🍳
                                             @elseif($delivery->status === 'on_the_way')
                                                 Sedang Diperjalanan 🛵
@@ -105,6 +103,12 @@
                                             @endif
                                         </p>
                                     </div>
+                                </div>
+                                <div
+                                    class="mt-4 text-xs text-gray-400 hover:text-gray-600 hover:underline cursor-pointer">
+                                    <a href="{{ route('customer.orders.history') }}">
+                                        Lihat selengkapnya →
+                                    </a>
                                 </div>
                             </div>
                         @endforeach
