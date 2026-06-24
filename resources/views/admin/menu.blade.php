@@ -34,8 +34,10 @@
             <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
                 <h4 class="font-bold text-slate-900 text-base border-b border-slate-100 pb-2">Tambah Menu Baru</h4>
 
-                <form action="{{ route('admin.menu.store') }}" method="POST" class="space-y-4">
+                <form action="{{ route('admin.menu.store') }}" method="POST" enctype="multipart/form-data"
+                    class="space-y-4">
                     @csrf
+
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Nama
                             Makanan</label>
@@ -53,12 +55,11 @@
                     </div>
 
                     <div>
-                        <label
-                            class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Harga</label>
-                        <input type="number" step="0.01" name="price" value="{{ old('price') }}"
-                            placeholder="0.00"
-                            class="block w-full rounded-xl border-slate-200 text-sm focus:border-emerald-500 focus:ring-emerald-500 shadow-sm"
-                            required>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Upload
+                            Gambar Menu</label>
+                        <input type="file" name="image" accept="image/jpeg, image/png, image/jpg"
+                            class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 border border-slate-200 rounded-xl cursor-pointer">
+                        <p class="mt-1 text-[10px] text-slate-400">Format: JPG, JPEG, PNG. Maksimal 2MB.</p>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
@@ -88,13 +89,22 @@
                         </div>
                     </div>
 
-                    <div>
-                        <label
-                            class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Harga</label>
-                        <input type="number" step="0.01" name="price" value="{{ old('price') }}"
-                            placeholder="0.00"
-                            class="block w-full rounded-xl border-slate-200 text-sm focus:border-emerald-500 focus:ring-emerald-500 shadow-sm"
-                            required>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Harga
+                                (Rp)</label>
+                            <input type="number" step="0.01" name="price" value="{{ old('price') }}"
+                                placeholder="0.00"
+                                class="block w-full rounded-xl border-slate-200 text-sm focus:border-emerald-500 focus:ring-emerald-500 shadow-sm"
+                                required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Stok
+                                (Porsi)</label>
+                            <input type="number" name="stock" value="{{ old('stock') }}" placeholder="10"
+                                class="block w-full rounded-xl border-slate-200 text-sm focus:border-emerald-500 focus:ring-emerald-500 shadow-sm"
+                                required>
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-3 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
@@ -154,21 +164,45 @@
                             @forelse($menus as $menu)
                                 <tr class="hover:bg-slate-50/50 transition">
                                     <td class="py-4 px-6">
-                                        <p class="font-bold text-slate-900">{{ $menu->name }}
-                                            <span
-                                                class="text-xs {{ $menu->is_available && $menu->stock > 0 ? 'text-green-600' : 'text-red-600' }} ml-1">({{ $menu->is_available && $menu->stock > 0 ? 'Ready' : 'Kosong' }})</span>
-                                        </p>
-                                        <p class="text-xs text-slate-400 truncate max-w-[220px]">
-                                            {{ $menu->description ?? 'Tidak ada deskripsi.' }}
-                                        </p>
+                                        <div class="flex items-center space-x-4">
+
+                                            <div class="flex-shrink-0 w-12 h-12">
+                                                @if ($menu->image_path)
+                                                    <img class="w-full h-full rounded-xl object-cover shadow-sm border border-slate-100"
+                                                        src="{{ asset('storage/' . $menu->image_path) }}"
+                                                        alt="{{ $menu->name }}">
+                                                @else
+                                                    <div
+                                                        class="w-full h-full rounded-xl bg-slate-100 flex items-center justify-center border border-slate-200">
+                                                        <svg class="w-5 h-5 text-slate-400" fill="none"
+                                                            stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="1.5"
+                                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                                            </path>
+                                                        </svg>
+                                                    </div>
+                                                @endif
+                                            </div>
+
+                                            <div>
+                                                <p class="font-bold text-slate-900">{{ $menu->name }}
+                                                    <span
+                                                        class="text-xs {{ $menu->is_available && $menu->stock > 0 ? 'text-green-600' : 'text-red-600' }} ml-1">({{ $menu->is_available && $menu->stock > 0 ? 'Ready' : 'Kosong' }})</span>
+                                                </p>
+                                                <p class="text-xs text-slate-400 truncate max-w-[220px]">
+                                                    {{ $menu->description ?? 'Tidak ada deskripsi.' }}
+                                                </p>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td class="py-4 px-6 text-xs text-slate-600">
                                         @if ($menu->nutrition)
                                             <p class="font-bold text-slate-900">{{ $menu->nutrition->calories }} kkal
                                             </p>
                                             <p class="text-slate-400 mt-0.5">P: {{ $menu->nutrition->protein_g }}g |
-                                                K:
-                                                {{ $menu->nutrition->carbs_g }}g | L: {{ $menu->nutrition->fat_g }}g
+                                                K: {{ $menu->nutrition->carbs_g }}g | L:
+                                                {{ $menu->nutrition->fat_g }}g
                                             </p>
                                         @else
                                             <span class="text-xs text-rose-400 italic font-medium">Data gizi
@@ -177,23 +211,24 @@
                                     </td>
                                     <td class="py-4 px-6">
                                         <p class="font-bold text-slate-900">Rp
-                                            {{ number_format($menu->price, 0, ',', '.') }}
-                                        </p>
+                                            {{ number_format($menu->price, 0, ',', '.') }}</p>
+                                    </td>
                                     <td class="py-4 px-6">
                                         <div class="flex items-center justify-center space-x-3">
                                             <button
                                                 @click="
-                                                    editUrl = '{{ route('admin.menu.update', $menu->id) }}';
-                                                    menuData.name = '{{ addslashes($menu->name) }}';
-                                                    menuData.description = '{{ addslashes($menu->description) }}';
-                                                    menuData.price = '{{ $menu->price }}';
-                                                    menuData.calories = '{{ $menu->nutrition->calories ?? 0 }}';
-                                                    menuData.protein_g = '{{ $menu->nutrition->protein_g ?? 0 }}';
-                                                    menuData.carbs_g = '{{ $menu->nutrition->carbs_g ?? 0 }}';
-                                                    menuData.fat_g = '{{ $menu->nutrition->fat_g ?? 0 }}';
-                                                    menuData.is_available = '{{ $menu->is_available ? '1' : '0' }}';
-                                                    editModalOpen = true;
-                                                "
+                                    editUrl = '{{ route('admin.menu.update', $menu->id) }}';
+                                    menuData.name = '{{ addslashes($menu->name) }}';
+                                    menuData.description = '{{ addslashes($menu->description) }}';
+                                    menuData.price = '{{ $menu->price }}';
+                                    menuData.stock = '{{ $menu->stock }}';
+                                    menuData.calories = '{{ $menu->nutrition->calories ?? 0 }}';
+                                    menuData.protein_g = '{{ $menu->nutrition->protein_g ?? 0 }}';
+                                    menuData.carbs_g = '{{ $menu->nutrition->carbs_g ?? 0 }}';
+                                    menuData.fat_g = '{{ $menu->nutrition->fat_g ?? 0 }}';
+                                    menuData.is_available = '{{ $menu->is_available ? '1' : '0' }}';
+                                    editModalOpen = true;
+                                "
                                                 class="text-xs font-bold text-emerald-600 hover:text-emerald-800 hover:underline">
                                                 Edit
                                             </button>
@@ -214,8 +249,7 @@
                             @empty
                                 <tr>
                                     <td colspan="4" class="py-8 text-center text-sm text-slate-400 italic">Belum
-                                        ada
-                                        menu makanan diet yang terdaftar.</td>
+                                        ada menu makanan diet yang terdaftar.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -247,7 +281,7 @@
                         </button>
                     </div>
 
-                    <form :action="editUrl" method="POST" class="space-y-4">
+                    <form :action="editUrl" method="POST" enctype="multipart/form-data" class="space-y-4">
                         @csrf
                         @method('PUT')
 
@@ -268,11 +302,31 @@
                         </div>
 
                         <div>
-                            <label
-                                class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Harga</label>
-                            <input type="number" step="0.01" name="price" x-model="menuData.price"
-                                class="block w-full rounded-xl border-slate-200 text-sm focus:border-emerald-500 focus:ring-emerald-500 shadow-sm"
-                                required>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Ganti
+                                Gambar (Opsional)</label>
+                            <input type="file" name="image" accept="image/jpeg, image/png, image/jpg"
+                                class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 border border-slate-200 rounded-xl cursor-pointer">
+                            <p class="mt-1 text-[10px] text-slate-400">Kosongkan jika tidak ingin mengganti gambar.
+                                Format: JPG, JPEG, PNG.</p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label
+                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Harga
+                                    (Rp)</label>
+                                <input type="number" step="0.01" name="price" x-model="menuData.price"
+                                    class="block w-full rounded-xl border-slate-200 text-sm focus:border-emerald-500 focus:ring-emerald-500 shadow-sm"
+                                    required>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Stok
+                                    (Porsi)</label>
+                                <input type="number" name="stock" x-model="menuData.stock"
+                                    class="block w-full rounded-xl border-slate-200 text-sm focus:border-emerald-500 focus:ring-emerald-500 shadow-sm"
+                                    required>
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">

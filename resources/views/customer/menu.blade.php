@@ -107,8 +107,20 @@
             <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 @forelse($menus as $menu)
                     <div x-show="search === '' || '{{ strtolower(addslashes($menu->name)) }}'.includes(search.toLowerCase())"
-                        class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex flex-col justify-between space-y-4 hover:shadow-md transition">
-                        <div class="space-y-2">
+                        class="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition">
+
+                        <div class="w-full h-40 mb-4 rounded-xl overflow-hidden bg-slate-50 relative group">
+                            @if ($menu->image_path)
+                                <img src="{{ asset('storage/' . $menu->image_path) }}" alt="{{ $menu->name }}"
+                                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                            @else
+                                <div class="w-full h-full flex items-center justify-center text-slate-300">
+                                    <span class="text-xs font-medium">Tidak ada gambar</span>
+                                </div>
+                            @endif
+                        </div>
+
+                        <div class="space-y-2 flex-1">
                             <div class="flex items-center justify-between">
                                 <span class="text-xs font-bold text-slate-400">🔥 {{ $menu->nutrition->calories ?? 0 }}
                                     Kkal</span>
@@ -120,24 +132,28 @@
 
                             @if ($menu->nutrition)
                                 <div
-                                    class="grid grid-cols-3 gap-1 bg-slate-50 p-2 rounded-xl text-[11px] text-slate-500 text-center font-semibold">
-                                    <div>Protein: <span class="text-slate-800">{{ $menu->nutrition->protein_g }}g</span>
+                                    class="grid grid-cols-3 gap-1 bg-slate-50 p-2 rounded-xl text-[11px] text-slate-500 text-center font-semibold mt-2">
+                                    <div>Protein: <span
+                                            class="text-slate-800">{{ $menu->nutrition->protein_g }}g</span></div>
+
+                                    <div>Karbo: <span class="text-slate-800">{{ $menu->nutrition->carbs_g }}g</span>
                                     </div>
-                                    <div>Kalori: <span class="text-slate-800">{{ $menu->nutrition->carbs_g }}g</span>
-                                    </div>
+
                                     <div>Lemak: <span class="text-slate-800">{{ $menu->nutrition->fat_g }}g</span>
                                     </div>
                                 </div>
                             @endif
                         </div>
 
-                        <div class="flex items-center justify-between pt-2 border-t border-slate-50">
-                            <span class="font-black text-slate-900 text-sm">
-                                Rp {{ number_format($menu->price, 0, ',', '.') }} (Stok: {{ $menu->stock }} Porsi)
+                        <div class="flex items-center justify-between pt-3 mt-3 border-t border-slate-50">
+                            <span class="font-black text-slate-900 text-sm flex flex-col">
+                                Rp {{ number_format($menu->price, 0, ',', '.') }}
+                                <span class="text-[10px] text-slate-400 font-normal">Stok: {{ $menu->stock }}
+                                    Porsi</span>
                             </span>
                             <button @if ($menu->stock <= 0) disabled @endif
                                 @click="addMenu({{ $menu->id }}, '{{ addslashes($menu->name) }}', {{ $menu->price }}, {{ $menu->nutrition->calories ?? 0 }})"
-                                class="bg-slate-900 hover:bg-slate-800 {{ $menu->stock <= 0 ? 'opacity-50 cursor-not-allowed' : '' }} text-white font-bold text-xs py-1.5 px-3 rounded-xl transition">
+                                class="bg-slate-900 hover:bg-slate-800 {{ $menu->stock <= 0 ? 'opacity-50 cursor-not-allowed' : '' }} text-white font-bold text-xs py-2 px-4 rounded-xl transition shadow-sm">
                                 + Tambah
                             </button>
                         </div>

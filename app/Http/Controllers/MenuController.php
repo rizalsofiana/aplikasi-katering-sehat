@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Menu;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class MenuController extends Controller
 {
@@ -71,6 +72,7 @@ class MenuController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Tambahkan validasi gambar
             'calories' => 'required|integer|min:0',
             'protein_g' => 'required|numeric|min:0',
             'carbs_g' => 'required|numeric|min:0',
@@ -82,9 +84,24 @@ class MenuController extends Controller
         $menu = Menu::findOrFail($id);
 
         DB::transaction(function () use ($request, $menu) {
+            // Ambil path gambar lama sebagai default
+            $imagePath = $menu->image_path;
+
+            // Cek apakah ada file gambar baru yang diunggah
+            if ($request->hasFile('image')) {
+                // Hapus gambar lama jika ada
+                if ($menu->image_path && Storage::disk('public')->exists($menu->image_path)) {
+                    Storage::disk('public')->delete($menu->image_path);
+                }
+
+                // Simpan gambar baru
+                $imagePath = $request->file('image')->store('menus', 'public');
+            }
+
             $menu->update([
                 'name' => $request->name,
                 'description' => $request->description,
+                'image_path' => $imagePath, // Update kolom image_path
                 'price' => $request->price,
                 'is_available' => $request->is_available,
                 'stock' => $request->stock,
