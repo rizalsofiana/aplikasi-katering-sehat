@@ -24,28 +24,48 @@
             <div class="space-y-4">
                 <h4 class="font-bold text-slate-900 text-base flex items-center justify-between">
                     <span>📦 Lowongan Pengiriman Terbuka</span>
-                    <span
-                        class="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-full font-bold">{{ $availableDeliveries->count() }}
-                        Tersedia</span>
+                    <span class="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-full font-bold">
+                        {{ $availableDeliveries->count() }} Order Tersedia
+                    </span>
                 </h4>
 
                 <div class="space-y-3">
-                    @forelse($availableDeliveries as $deliv)
+                    @forelse($availableDeliveries as $orderId => $deliveries)
+                        @php
+                            // Mengambil data representatif untuk satu invoice
+                            $firstDeliv = $deliveries->first();
+                        @endphp
                         <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-4">
 
                             <div class="flex items-start justify-between">
                                 <div class="space-y-1">
                                     <span
                                         class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-100 uppercase tracking-wider">
-                                        {{ $deliv->status }}
+                                        Invoice Number: #{{ $deliveries->first()->order->invoice_number }}
+                                    </span><br>
+                                    <span
+                                        class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-100 uppercase tracking-wider">
+                                        Invoice ID: #{{ $orderId }}
                                     </span>
-                                    <h5 class="font-bold text-slate-800 text-sm mt-1">{{ $deliv->menu->name }}</h5>
-                                    <p class="text-xs text-slate-400">📅
-                                        {{ \Carbon\Carbon::parse($deliv->delivery_date)->format('d M Y') }} | 🕒
-                                        {{ ucfirst($deliv->meal_time) }}</p>
+
+                                    <div class="mt-2 space-y-1">
+                                        <p class="text-xs text-slate-400 font-medium">Menu yang dipesan:</p>
+                                        @foreach ($deliveries as $deliv)
+                                            <h5 class="font-bold text-slate-800 text-sm flex items-center gap-1">
+                                                • {{ $deliv->menu->name }}
+                                                <span
+                                                    class="text-xs text-emerald-600 font-normal">({{ $deliv->status }})</span>
+                                            </h5>
+                                        @endforeach
+                                    </div>
+
+                                    <p class="text-xs text-slate-400 mt-2">📅
+                                        {{ \Carbon\Carbon::parse($firstDeliv->delivery_date)->format('d M Y') }} | 🕒
+                                        {{ ucfirst($firstDeliv->meal_time) }}
+                                    </p>
                                 </div>
 
-                                <form action="{{ route('deliveries.take', $deliv->id) }}" method="POST">
+                                <form action="{{ route('deliveries.take', $orderId) }}" method="POST">
                                     @csrf
                                     @method('PATCH')
                                     <button type="submit"
@@ -56,15 +76,18 @@
                             </div>
 
                             <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs space-y-1.5">
-                                <p class="text-slate-600"><span class="font-bold text-slate-800">👤 Tujuan:</span>
-                                    {{ $deliv->order->user->name ?? 'Customer' }}</p>
+                                <p class="text-slate-600"><span class="font-bold text-slate-800">👤 Penerima:</span>
+                                    {{ $firstDeliv->order->user->name ?? 'Customer' }}</p>
+                                <p class="text-slate-600"><span class="font-bold text-slate-800">📞 Nomor
+                                        Telepon:</span>
+                                    {{ $firstDeliv->order->user->phone ?? '-' }}</p>
                                 <p class="text-slate-600"><span class="font-bold text-slate-800">📍 Alamat:</span>
-                                    {{ $deliv->delivery_address ?? 'Alamat belum diatur' }}</p>
-                                @if ($deliv->latitude && $deliv->longitude)
+                                    {{ $firstDeliv->delivery_address ?? 'Alamat belum diatur' }}</p>
+                                @if ($firstDeliv->latitude && $firstDeliv->longitude)
                                     <button type="button"
-                                        onclick="viewDriverMap('{{ $deliv->latitude }}', '{{ $deliv->longitude }}', '{{ $deliv->order->user->name ?? 'Customer' }}')"
+                                        onclick="viewDriverMap('{{ $firstDeliv->latitude }}', '{{ $firstDeliv->longitude }}', '{{ $firstDeliv->order->user->name ?? 'Customer' }}')"
                                         class="mt-2 inline-flex items-center space-x-1.5 bg-sky-500 hover:bg-sky-600 text-white font-bold px-2.5 py-1.5 rounded-lg transition text-[11px] shadow-sm">
-                                        <span>🗺️ Lihat Peta Lokasi Pengantaran</span>
+                                        <span>🗺️ Lihat Peta Lokasi</span>
                                     </button>
                                 @else
                                     <p class="text-[10px] text-amber-500 italic mt-1">⚠️ Customer tidak menandai peta
@@ -85,34 +108,46 @@
             <div class="space-y-4">
                 <h4 class="font-bold text-slate-900 text-base flex items-center justify-between">
                     <span>📋 Daftar Pengantaran Aktif Anda</span>
-                    <span
-                        class="bg-emerald-50 text-emerald-700 text-xs px-2.5 py-1 rounded-full font-bold">{{ $myDeliveries->count() }}
-                        Proses</span>
+                    <span class="bg-emerald-50 text-emerald-700 text-xs px-2.5 py-1 rounded-full font-bold">
+                        {{ $myDeliveries->count() }} Invoice Proses
+                    </span>
                 </h4>
 
                 <div class="space-y-3">
-                    @forelse($myDeliveries as $myDeliv)
+                    @forelse($myDeliveries as $orderId => $deliveries)
+                        @php
+                            $firstDeliv = $deliveries->first();
+                        @endphp
                         <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-4">
 
                             <div class="flex items-start justify-between">
                                 <div>
-                                    <h5 class="font-bold text-slate-800 text-sm">{{ $myDeliv->menu->name }}</h5>
-                                    <p class="text-xs text-slate-400">Kirim:
-                                        {{ \Carbon\Carbon::parse($myDeliv->delivery_date)->format('d M Y') }}
-                                        ({{ ucfirst($myDeliv->meal_time) }})
+                                    <span class="text-[10px] font-mono text-slate-400 block mb-1">Invoice
+                                        #{{ $orderId }}</span>
+
+                                    <div class="space-y-1">
+                                        @foreach ($deliveries as $deliv)
+                                            <h5 class="font-bold text-slate-800 text-sm">• {{ $deliv->menu->name }}
+                                            </h5>
+                                        @endforeach
+                                    </div>
+
+                                    <p class="text-xs text-slate-400 mt-2">Kirim:
+                                        {{ \Carbon\Carbon::parse($firstDeliv->delivery_date)->format('d M Y') }}
+                                        ({{ ucfirst($firstDeliv->meal_time) }})
                                     </p>
                                 </div>
 
                                 <div>
-                                    @if ($myDeliv->status == 'on_the_way')
+                                    @if ($firstDeliv->status == 'on_the_way')
                                         <span
                                             class="bg-sky-50 text-sky-700 border border-sky-100 text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider animate-pulse">🚚
                                             On The Way</span>
-                                    @elseif($myDeliv->status == 'cooking')
+                                    @elseif($firstDeliv->status == 'cooking')
                                         <span
                                             class="bg-amber-50 text-amber-700 border border-amber-100 text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider">🍳
                                             Cooking</span>
-                                    @elseif($myDeliv->status == 'delivered')
+                                    @elseif($firstDeliv->status == 'delivered')
                                         <span
                                             class="bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider">✓
                                             Delivered</span>
@@ -126,32 +161,33 @@
 
                             <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs space-y-1.5">
                                 <p class="text-slate-600"><span class="font-bold text-slate-800">👤 Penerima:</span>
-                                    {{ $myDeliv->order->user->name ?? 'Customer' }}</p>
+                                    {{ $firstDeliv->order->user->name ?? 'Customer' }}</p>
                                 <p class="text-slate-600"><span class="font-bold text-slate-800">📍 Alamat
-                                        Lengkap:</span> {{ $myDeliv->delivery_address ?? 'Alamat belum diatur' }}</p>
+                                        Lengkap:</span>
+                                    {{ $firstDeliv->delivery_address ?? 'Alamat belum diatur' }}</p>
 
-                                @if ($myDeliv->latitude && $myDeliv->longitude)
+                                @if ($firstDeliv->latitude && $firstDeliv->longitude)
                                     <button type="button"
-                                        onclick="viewDriverMap('{{ $myDeliv->latitude }}', '{{ $myDeliv->longitude }}', '{{ $myDeliv->order->user->name ?? 'Customer' }}')"
+                                        onclick="viewDriverMap('{{ $firstDeliv->latitude }}', '{{ $firstDeliv->longitude }}', '{{ $firstDeliv->order->user->name ?? 'Customer' }}')"
                                         class="mt-2 inline-flex items-center space-x-1.5 bg-sky-500 hover:bg-sky-600 text-white font-bold px-2.5 py-1.5 rounded-lg transition text-[11px] shadow-sm">
-                                        <span>🗺️ Lihat Peta Lokasi Pengantaran</span>
+                                        <span>🗺️ Lihat Peta Lokasi</span>
                                     </button>
                                 @else
                                     <p class="text-[10px] text-amber-500 italic mt-1">⚠️ Customer tidak menandai peta
                                     </p>
                                 @endif
 
-                                @if ($myDeliv->notes)
+                                @if ($firstDeliv->notes)
                                     <p class="text-slate-600"><span class="font-bold text-slate-800">📝 Catatan:</span>
-                                        <span class="italic text-amber-600">{{ $myDeliv->notes }}</span>
+                                        <span class="italic text-amber-600">{{ $firstDeliv->notes }}</span>
                                     </p>
                                 @endif
                             </div>
 
                             <div class="pt-3 border-t border-slate-50 flex justify-end">
-                                @if ($myDeliv->status == 'cooking' || $myDeliv->status == 'ready')
-                                    <form action="{{ route('deliveries.otw', $myDeliv->id) }}" method="POST"
-                                        onsubmit="return confirm('Mulai mengantarkan makanan ini sekarang?')">
+                                @if ($firstDeliv->status == 'cooking' || $firstDeliv->status == 'ready')
+                                    <form action="{{ route('deliveries.otw', $orderId) }}" method="POST"
+                                        onsubmit="return confirm('Mulai mengantarkan makanan di invoice ini?')">
                                         @csrf
                                         @method('PATCH')
                                         <button type="submit"
@@ -159,24 +195,24 @@
                                             🚀 Kirim Sekarang (Set OTW)
                                         </button>
                                     </form>
-                                @elseif($myDeliv->status == 'on_the_way')
+                                @elseif($firstDeliv->status == 'on_the_way')
                                     <div class="flex space-x-2 w-full justify-end">
-                                        <form action="{{ route('deliveries.failed', $myDeliv->id) }}" method="POST"
+                                        <form action="{{ route('deliveries.failed', $orderId) }}" method="POST"
                                             onsubmit="return confirm('Konfirmasi bahwa makanan batal diantarkan?')">
                                             @csrf
                                             @method('PATCH')
                                             <button type="submit"
-                                                class="bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-600 font-bold text-xs py-1.5 px-3 rounded-xl transition flex items-center">
+                                                class="bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-600 font-bold text-xs py-1.5 px-3 rounded-xl transition">
                                                 <span>✕ Gagal</span>
                                             </button>
                                         </form>
 
-                                        <form action="{{ route('deliveries.delivered', $myDeliv->id) }}" method="POST"
+                                        <form action="{{ route('deliveries.delivered', $orderId) }}" method="POST"
                                             onsubmit="return confirm('Konfirmasi bahwa makanan telah diterima oleh customer?')">
                                             @csrf
                                             @method('PATCH')
                                             <button type="submit"
-                                                class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-1.5 px-3 rounded-xl transition shadow-md shadow-emerald-100 flex items-center">
+                                                class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-1.5 px-3 rounded-xl transition shadow-md shadow-emerald-100">
                                                 <span>✓ Selesai Diantar</span>
                                             </button>
                                         </form>

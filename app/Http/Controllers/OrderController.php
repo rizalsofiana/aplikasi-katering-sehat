@@ -45,16 +45,11 @@ class OrderController extends Controller
         $user = Auth::user();
         $profile = $user->profile;
 
-        // Ambil target kalori dari profil, default 2000 jika kosong
         $dailyCalorieTarget = $profile ? $profile->daily_calorie_target : 2000;
-
-        // Kalkulasi target protein (Standar gizi: Berat badan x 1.5 gram s/d 2.0 gram)
-        // Jika data berat badan kosong, kita asumsikan butuh 60g protein/hari
         $dailyProteinTarget = ($profile && $profile->weight_kg) ? ($profile->weight_kg * 1.5) : 60;
 
         // =========================================================================
-        // 🟢 TAHAP 2: HITUNG NUTRISI KERANJANG BARU (Berdasarkan Database)
-        // PENTING: Jangan percaya data harga/kalori dari frontend untuk mencegah manipulasi
+        // 🟢 TAHAP 2: HITUNG NUTRISI KERANJANG BARU & VALIDASI STOK
         // =========================================================================
         $menuIds = array_column($cartItems, 'id');
         $menus = Menu::with('nutrition')->whereIn('id', $menuIds)->get()->keyBy('id');
@@ -66,7 +61,14 @@ class OrderController extends Controller
         foreach ($cartItems as $item) {
             $menu = $menus->get($item['id']);
             if ($menu) {
-                $totalAmount += ($menu->price * $item['qty']); // Hitung ulang total bayar murni dari DB
+                // 💡 BARU: Validasi ketersediaan stok sebelum diproses
+                if ($menu->stock < $item['qty']) {
+                    return response()->json([
+                        'message' => "Maaf, stok untuk menu '{$menu->name}' tidak mencukupi. Sisa stok: {$menu->stock} porsi."
+                    ], 400);
+                }
+
+                $totalAmount += ($menu->price * $item['qty']);
 
                 if ($menu->nutrition) {
                     $cartCalories += ($menu->nutrition->calories * $item['qty']);
@@ -77,14 +79,13 @@ class OrderController extends Controller
 
         // =========================================================================
         // 🟢 TAHAP 3: HITUNG HISTORI MAKANAN DI TANGGAL TERSEBUT
-        // (Mencari pesanan apa saja yang sudah dijadwalkan di hari yang sama)
         // =========================================================================
         $existingDeliveries = Delivery::with('menu.nutrition')
             ->whereHas('order', function ($query) use ($user) {
-                $query->where('user_id', $user->id); // Tembus ke tabel order untuk filter user
+                $query->where('user_id', $user->id);
             })
             ->whereDate('delivery_date', $request->delivery_date)
-            ->whereIn('status', ['cooking', 'on_the_way', 'delivered']) // Abaikan yang failed/dibatalkan
+            ->whereIn('status', ['cooking', 'on_the_way', 'delivered'])
             ->get();
 
         $existingCalories = 0;
@@ -97,28 +98,25 @@ class OrderController extends Controller
             }
         }
 
-
         // =========================================================================
         // 🟢 TAHAP 4: VALIDASI GABUNGAN & GENERATE CATATAN
         // =========================================================================
         $totalDayCalories = $existingCalories + $cartCalories;
         $totalDayProtein = $existingProtein + $cartProtein;
 
-        // VALIDASI: Tolak pesanan jika membuat kalori harian jebol melebihi target
         if ($totalDayCalories > $dailyCalorieTarget) {
             return response()->json([
                 'message' => "TIDAK SEHAT! 🛑 Pesanan ini membuat Anda kelebihan kalori. Total konsumsi Anda pada tanggal tersebut akan menjadi {$totalDayCalories} Kkal (Melebihi target batas {$dailyCalorieTarget} Kkal). Silakan kurangi porsi."
-            ], 400); // 400 Bad Request akan memicu "alert(result.message)" di Alpine.js Anda
+            ], 400);
         }
 
-        // Buat rangkuman nutrisi untuk disimpan sebagai jejak di logistik kurir
         $nutritionNotes = "Gizi Harian: Kalori {$totalDayCalories}/{$dailyCalorieTarget} Kkal | Protein {$totalDayProtein}/{$dailyProteinTarget}g";
 
-
         // =========================================================================
-        // 🟢 TAHAP 5: SIMPAN DATA KE DATABASE
+        // 🟢 TAHAP 5: SIMPAN DATA KE DATABASE & POTONG STOK
         // =========================================================================
-        $order = DB::transaction(function () use ($request, $cartItems, $totalAmount, $nutritionNotes) {
+        // 💡 BARU: Tambahkan variabel $menus ke dalam 'use' agar bisa diakses di dalam transaction
+        $order = DB::transaction(function () use ($request, $cartItems, $totalAmount, $nutritionNotes, $menus) {
 
             $order = Order::create([
                 'user_id' => Auth::id(),
@@ -133,6 +131,17 @@ class OrderController extends Controller
                     'quantity' => $item['qty']
                 ]);
 
+                // 💡 BARU: Kurangi stok menu secara langsung di database menggunakan decrement()
+                $menuToUpdate = $menus->get($item['id']);
+                if ($menuToUpdate) {
+                    $menuToUpdate->decrement('stock', $item['qty']);
+
+                    // Opsional: Jika stok habis (0), otomatis ubah is_available jadi false
+                    if ($menuToUpdate->stock <= 0) {
+                        $menuToUpdate->update(['is_available' => false]);
+                    }
+                }
+
                 for ($i = 0; $i < $item['qty']; $i++) {
                     Delivery::create([
                         'order_id'         => $order->id,
@@ -144,7 +153,7 @@ class OrderController extends Controller
                         'longitude'        => $request->longitude ?? null,
                         'meal_time'        => $request->meal_time,
                         'status'           => 'cooking',
-                        'notes'            => $nutritionNotes, // 💡 Menyelipkan catatan gizi di sini
+                        'notes'            => $nutritionNotes,
                     ]);
                 }
             }
@@ -153,9 +162,8 @@ class OrderController extends Controller
         });
 
         $profile->update([
-            'daily_calorie_target' => $dailyCalorieTarget - $cartCalories, // Update sisa target kalori harian
+            'daily_calorie_target' => $dailyCalorieTarget - $cartCalories,
         ]);
-
 
         // =========================================================================
         // 🟢 TAHAP 6: INTEGRASI MIDTRANS SNAP
@@ -232,19 +240,21 @@ class OrderController extends Controller
     {
         $driverId = Auth::id();
 
-        // A. List pesanan yang BELUM memiliki driver menggunakan nested relationship 'order.user'
-        $availableDeliveries = Delivery::with(['menu', 'order'])
+        // A. List pesanan yang BELUM memiliki driver
+        $availableDeliveries = Delivery::with(['menu', 'order.user', 'order'])
             ->whereNull('driver_id')
-            ->whereIn('status', ['cooking'])
+            ->whereIn('status', ['cooking']) // Sesuaikan status ketersediaan dengan alur Anda
             ->latest()
-            ->get();
+            ->get()
+            ->groupBy('order_id'); // 💡 TAMBAHKAN INI DI SINI (Setelah get)
 
         // B. List pesanan yang sedang diambil/ditugaskan ke driver ini
-        $myDeliveries = Delivery::with(['menu', 'order'])
+        $myDeliveries = Delivery::with(['menu', 'order.user', 'order'])
             ->where('driver_id', $driverId)
             ->whereIn('status', ['cooking', 'on_the_way'])
             ->latest()
-            ->get();
+            ->get()
+            ->groupBy('order_id'); // 💡 TAMBAHKAN INI JUGA DI SINI
 
         return view('driver.driver', compact('availableDeliveries', 'myDeliveries'));
     }

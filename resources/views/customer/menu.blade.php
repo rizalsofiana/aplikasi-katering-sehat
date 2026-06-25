@@ -7,12 +7,29 @@
         lng: '',
         search: '',
     
-        addMenu(id, name, price, calories) {
+        addMenu(id, name, price, calories, stock) {
             let item = this.cart.find(i => i.id === id);
+    
             if (item) {
-                item.qty++;
+                // Cek apakah jumlah di keranjang sudah mencapai batas stok
+                if (item.qty < stock) {
+                    item.qty++;
+                } else {
+                    // Tampilkan pesan error jika melebihi stok
+                    alert(`Maaf, sisa stok untuk ${name} hanya ${stock} porsi.`);
+                }
             } else {
-                this.cart.push({ id: id, name: name, price: Number(price), calories: calories, qty: 1 });
+                // Pastikan menu ditambahkan beserta informasi batas stoknya
+                if (stock > 0) {
+                    this.cart.push({
+                        id: id,
+                        name: name,
+                        price: Number(price),
+                        calories: calories,
+                        stock: Number(stock), // 💡 Simpan batas stok di objek keranjang
+                        qty: 1
+                    });
+                }
             }
         },
     
@@ -152,7 +169,12 @@
                                     Porsi</span>
                             </span>
                             <button @if ($menu->stock <= 0) disabled @endif
-                                @click="addMenu({{ $menu->id }}, '{{ addslashes($menu->name) }}', {{ $menu->price }}, {{ $menu->nutrition->calories ?? 0 }})"
+                                @click="addMenu(
+                                {{ $menu->id }}, 
+                                '{{ addslashes($menu->name) }}', 
+                                {{ $menu->price }}, 
+                                {{ $menu->nutrition->calories ?? 0 }}, 
+                                {{ $menu->stock }}  )"
                                 class="bg-slate-900 hover:bg-slate-800 {{ $menu->stock <= 0 ? 'opacity-50 cursor-not-allowed' : '' }} text-white font-bold text-xs py-2 px-4 rounded-xl transition shadow-sm">
                                 + Tambah
                             </button>
@@ -188,9 +210,11 @@
                             <div class="flex items-center space-x-2">
                                 <button @click="removeMenu(item.id)"
                                     class="bg-slate-100 px-1.5 py-0.5 rounded font-bold">-</button>
+
                                 <span class="font-bold text-slate-800 w-4 text-center" x-text="item.qty"></span>
-                                <button @click="addMenu(item.id, item.name, item.price, item.calories)"
-                                    class="bg-slate-100 px-1.5 py-0.5 rounded font-bold">+</button>
+
+                                <button @click="addMenu(item.id, item.name, item.price, item.calories, item.stock)"
+                                    class="bg-slate-100 px-1.5 py-0.5 rounded font-bold hover:bg-slate-200 transition">+</button>
                             </div>
                         </div>
                     </template>

@@ -99,11 +99,11 @@
                                             <span
                                                 class="bg-emerald-50 text-emerald-800 font-bold px-2 py-0.5 rounded text-[11px]">{{ $item->menu->nutrition->calories }}
                                                 kkal</span>
-                                            <span>P: <strong
+                                            <span>Protein: <strong
                                                     class="text-slate-600">{{ $item->menu->nutrition->protein_g }}g</strong></span>
-                                            <span>K: <strong
+                                            <span>Karbo: <strong
                                                     class="text-slate-600">{{ $item->menu->nutrition->carbs_g }}g</strong></span>
-                                            <span>L: <strong
+                                            <span>Lemak: <strong
                                                     class="text-slate-600">{{ $item->menu->nutrition->fat_g }}g</strong></span>
                                         </div>
                                     @endif
