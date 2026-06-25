@@ -24,7 +24,9 @@ class UserController extends Controller
             $query->where('role', $selectedRole);
         }
 
-        $users = $query->latest()->get();
+        // Ganti ->get() menjadi ->paginate(10) (10 adalah jumlah data per halaman)
+        // withQueryString() digunakan agar parameter URL (seperti ?role=admin) tetap terbawa saat pindah halaman
+        $users = $query->latest()->paginate(5)->withQueryString();
 
         return view('admin.users', compact('users', 'selectedRole'));
     }
