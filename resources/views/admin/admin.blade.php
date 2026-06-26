@@ -8,19 +8,20 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                 <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Pelanggan</span>
-                <h4 class="text-3xl font-black text-slate-800 mt-2">1,248</h4>
+                <h4 class="text-3xl font-black text-slate-800 mt-2">{{ $totalUser }}</h4>
             </div>
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                 <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Pesanan Aktif</span>
-                <h4 class="text-3xl font-black text-emerald-600 mt-2">84 Paket</h4>
+                <h4 class="text-3xl font-black text-emerald-600 mt-2">{{ $activeOrder }}</h4>
             </div>
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                 <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Kurir Aktif</span>
-                <h4 class="text-3xl font-black text-slate-800 mt-2">12 Driver</h4>
+                <h4 class="text-3xl font-black text-slate-800 mt-2">{{ $totalDriver }}</h4>
             </div>
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                 <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Pendapatan Bulan Ini</span>
-                <h4 class="text-2xl font-black text-blue-600 mt-2.5">Rp 14.5M</h4>
+                <h4 class="text-2xl font-black text-blue-600 mt-2.5">Rp {{ number_format($incomeMonthly, 0, ',', '.') }}
+                </h4>
             </div>
         </div>
     </div>

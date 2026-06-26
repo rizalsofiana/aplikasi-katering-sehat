@@ -8,7 +8,9 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\UserController;
 use App\Models\Delivery;
+use App\Models\Order;
 use App\Models\Subscription;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -24,7 +26,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         $profile = $user->profile;
 
         if ($user->role === 'admin') {
-            return view('admin.admin');
+
+            $totalUser = User::where('role', 'customer')->count();
+
+            $activeOrder = Delivery::where('status', ['cooking', 'on the way'])
+                ->count();
+
+            $totalDriver = User::where('role', 'driver')->count();
+
+            $incomeMonthly = Order::whereMonth('created_at', Carbon::now('Asia/Jakarta')->month)
+                ->whereYear('created_at', Carbon::now('Asia/Jakarta')->year)
+                ->sum('total_amount');
+
+            return view('admin.admin', compact('totalUser', 'activeOrder', 'totalDriver', 'incomeMonthly'));
         } elseif ($user->role === 'nutritionist') {
             return view('nutritionist.nutritionist', compact('profile'));
         } elseif ($user->role === 'driver') {
