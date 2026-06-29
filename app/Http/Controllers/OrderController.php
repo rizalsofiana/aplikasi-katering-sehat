@@ -158,6 +158,8 @@ class OrderController extends Controller
                 }
             }
 
+            $order->update(['status' => 'paid']);
+
             return $order;
         });
 
