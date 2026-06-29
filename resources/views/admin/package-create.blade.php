@@ -26,6 +26,16 @@
                     @enderror
                 </div>
 
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Deskripsi Paket</label>
+                    <textarea name="description" rows="3"
+                        placeholder="Contoh: Paket ini mencakup menu makan siang dan malam kaya serat..."
+                        class="block w-full rounded-xl border-slate-200 text-sm focus:border-emerald-500 focus:ring-emerald-500 shadow-sm">{{ old('description') }}</textarea>
+                    @error('description')
+                        <p class="text-xs text-rose-500 mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Tipe Durasi</label>
@@ -37,8 +47,6 @@
                                 (Monthly)</option>
                             <option value="yearly" {{ old('duration_type') == 'yearly' ? 'selected' : '' }}>Tahunan
                                 (Yearly)</option>
-                            <option value="custom" {{ old('duration_type') == 'custom' ? 'selected' : '' }}>Kustom
-                                (Custom)</option>
                         </select>
                         @error('duration_type')
                             <p class="text-xs text-rose-500 mt-1">{{ $message }}</p>
@@ -67,7 +75,7 @@
                 </div>
 
                 <button type="submit"
-                    class="w-full bg-slate-950 hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-xl transition text-xs uppercase tracking-wider pt-2">
+                    class="w-full bg-slate-950 hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-xl transition text-xs uppercase tracking-wider mt-2">
                     Simpan & Publikasikan Paket
                 </button>
             </form>

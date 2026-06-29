@@ -32,6 +32,7 @@ class AdminPackageController extends Controller
     {
         $request->validate([
             'package_name'  => 'required|string|max:255',
+            'description'   => 'nullable|string',
             'duration_type' => 'required|string|in:weekly,monthly,yearly,custom',
             'total_days'    => 'required|integer|min:1',
             'price'         => 'required|numeric|min:0',

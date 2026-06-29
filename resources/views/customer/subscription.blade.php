@@ -40,7 +40,6 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
             @forelse($packages as $package)
                 @php
-                    // Logika penanda visual paket terpopuler / rekomendasi (misal paket mingguan/bulanan)
                     $isPopular = $package->duration_type === 'monthly' || $package->total_days >= 30;
                 @endphp
 
@@ -55,9 +54,14 @@
                     @endif
 
                     <div class="p-6 space-y-6">
-                        <div class="space-y-1">
+                        <div class="space-y-2">
                             <h4 class="text-lg font-bold text-slate-900">{{ $package->package_name }}</h4>
-                            <p class="text-xs text-slate-400 uppercase tracking-wide font-semibold">
+
+                            <p class="text-xs text-slate-500 leading-relaxed italic">
+                                {{ $package->description ?? 'Program katering sehat yang disesuaikan untuk kebutuhan nutrisi harian Anda.' }}
+                            </p>
+
+                            <p class="text-[10px] text-slate-400 uppercase tracking-wide font-bold pt-1">
                                 {{ $package->total_days }} Hari Full Program</p>
                         </div>
 
@@ -67,24 +71,11 @@
                             <span class="text-xs text-slate-400 font-medium ml-1">/paket</span>
                         </div>
 
-                        <ul class="space-y-3 text-xs text-slate-600 border-t border-slate-50 pt-4">
-                            <li class="flex items-center space-x-2.5">
-                                <span class="text-emerald-500 font-bold">✓</span>
-                                <span>{{ $package->total_days }}x Pengiriman Makan Siang/Malam</span>
-                            </li>
-                            <li class="flex items-center space-x-2.5">
-                                <span class="text-emerald-500 font-bold">✓</span>
-                                <span>Bebas Konsultasi Makronutrisi Gizi</span>
-                            </li>
-                            <li class="flex items-center space-x-2.5">
-                                <span class="text-emerald-500 font-bold">✓</span>
-                                <span>Pengantaran Box Higienis oleh Kurir</span>
-                            </li>
-                            <li class="flex items-center space-x-2.5">
-                                <span class="text-emerald-500 font-bold">✓</span>
-                                <span>Bisa skip hari (pause pengiriman)</span>
-                            </li>
-                        </ul>
+                        <div
+                            class="border-t border-slate-50 pt-4 text-xs text-slate-600 leading-relaxed whitespace-pre-line">
+                            {{ $package->description ?? 'Deskripsi paket belum tersedia.' }}
+                        </div>
+
                     </div>
 
                     <div class="p-6 bg-slate-50/50 border-t border-slate-50">
@@ -94,7 +85,6 @@
                             Pilih & Mulai Langganan
                         </a>
                     </div>
-
                 </div>
             @empty
                 <div
@@ -103,6 +93,5 @@
                 </div>
             @endforelse
         </div>
-
     </div>
 </x-app-layout>

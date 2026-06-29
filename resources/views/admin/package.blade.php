@@ -25,11 +25,6 @@
                 {{ session('success') }}
             </div>
         @endif
-        @if (session('error'))
-            <div class="bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 rounded-xl text-xs font-semibold">
-                {{ session('error') }}
-            </div>
-        @endif
 
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
@@ -38,9 +33,10 @@
                         <tr
                             class="bg-slate-50 border-b border-slate-100 text-slate-400 text-[10px] uppercase font-bold tracking-wider">
                             <th class="py-4 px-6">Nama Paket</th>
-                            <th class="py-4 px-6">Tipe Durasi</th>
-                            <th class="py-4 px-6">Total Hari</th>
-                            <th class="py-4 px-6">Harga Paket</th>
+                            <th class="py-4 px-6">Deskripsi</th>
+                            <th class="py-4 px-6">Durasi</th>
+                            <th class="py-4 px-6">Hari</th>
+                            <th class="py-4 px-6">Harga</th>
                             <th class="py-4 px-6 text-center">Aksi</th>
                         </tr>
                     </thead>
@@ -48,6 +44,11 @@
                         @forelse($packages as $package)
                             <tr class="hover:bg-slate-50/50 transition">
                                 <td class="py-4 px-6 font-bold text-slate-900">{{ $package->package_name }}</td>
+
+                                <td class="py-4 px-6 text-slate-500 text-xs">
+                                    {{ Str::limit($package->description, 50, '...') ?? '-' }}
+                                </td>
+
                                 <td class="py-4 px-6">
                                     <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-xs capitalize">
                                         {{ $package->duration_type }}
@@ -77,7 +78,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="py-12 text-center text-slate-400 italic text-sm">
+                                <td colspan="6" class="py-12 text-center text-slate-400 italic text-sm">
                                     Belum ada data paket langganan yang dibuat.
                                 </td>
                             </tr>
@@ -90,6 +91,5 @@
         <div>
             {{ $packages->links() }}
         </div>
-
     </div>
 </x-app-layout>
