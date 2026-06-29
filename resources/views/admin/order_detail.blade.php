@@ -53,23 +53,6 @@
                         class="space-y-4">
                         @csrf
 
-                        <div class="space-y-2">
-                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Pilih Antrean
-                                Menu Pengiriman:</label>
-                            <div
-                                class="max-h-[180px] overflow-y-auto space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                @foreach ($deliveries->whereNull('driver_id') as $deliv)
-                                    <label
-                                        class="flex items-center space-x-2 text-xs font-medium text-slate-700 cursor-pointer">
-                                        <input type="checkbox" name="delivery_ids[]" value="{{ $deliv->id }}" checked
-                                            class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
-                                        <span>{{ $deliv->menu->name }} ({{ ucfirst($deliv->meal_time) }} -
-                                            {{ \Carbon\Carbon::parse($deliv->delivery_date)->format('d M') }})</span>
-                                    </label>
-                                @endforeach
-                            </div>
-                        </div>
-
                         <div class="space-y-1">
                             <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Pilih
                                 Personel Driver:</label>

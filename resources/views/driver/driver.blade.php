@@ -185,7 +185,7 @@
                             </div>
 
                             <div class="pt-3 border-t border-slate-50 flex justify-end">
-                                @if ($firstDeliv->status == 'cooking' || $firstDeliv->status == 'ready')
+                                @if ($firstDeliv->status == 'cooking')
                                     <form action="{{ route('deliveries.otw', $orderId) }}" method="POST"
                                         onsubmit="return confirm('Mulai mengantarkan makanan di invoice ini?')">
                                         @csrf

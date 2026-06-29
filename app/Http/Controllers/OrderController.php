@@ -225,7 +225,7 @@ class OrderController extends Controller
         // Ambil antrean delivery berdasarkan menu dari order ini yang BELUM punya driver
         $deliveries = Delivery::with('menu')
             ->whereIn('menu_id', $order->items->pluck('menu_id'))
-            ->whereNull('driver_id')
+            ->where('order_id', $id)
             ->get();
 
         $drivers = User::where('role', 'driver')->get();
@@ -281,11 +281,15 @@ class OrderController extends Controller
     // 4. Driver mengubah status menjadi On The Way saat berangkat
     public function updateStatusToOnTheWay(int $id)
     {
-        $delivery = Delivery::where('id', $id)->where('driver_id', Auth::id())->firstOrFail();
+        $updatedCount = Delivery::where('order_id', $id)
+            ->where('driver_id', Auth::id())
+            ->update([
+                'status' => 'on_the_way'
+            ]);
 
-        $delivery->update([
-            'status' => 'on_the_way'
-        ]);
+        if ($updatedCount === 0) {
+            abort(404, 'Pesanan tidak ditemukan atau Anda tidak memiliki akses.');
+        }
 
         return redirect()->back()->with('success', 'Status diperbarui: Pesanan sedang dalam perjalanan! Hati-hati di jalan.');
     }
@@ -293,11 +297,13 @@ class OrderController extends Controller
     public function updateStatusToDelivered(int $id)
     {
         // Pastikan delivery ini memang milik driver yang sedang login
-        $delivery = Delivery::where('id', $id)->where('driver_id', Auth::id())->firstOrFail();
-
-        $delivery->update([
+        $updatedCount = Delivery::where('order_id', $id)->where('driver_id', Auth::id())->update([
             'status' => 'delivered'
         ]);
+
+        if ($updatedCount === 0) {
+            abort(404, 'Pesanan tidak ditemukan atau Anda tidak memiliki akses.');
+        }
 
         return redirect()->back()->with('success', 'Alhamdulillah, pesanan telah sukses diantarkan ke pelanggan!');
     }
@@ -305,11 +311,13 @@ class OrderController extends Controller
     public function updateStatusToFailed(int $id)
     {
         // Pastikan delivery ini memang milik driver yang sedang login
-        $delivery = Delivery::where('id', $id)->where('driver_id', Auth::id())->firstOrFail();
-
-        $delivery->update([
+        $updatedCount = Delivery::where('order_id', $id)->where('driver_id', Auth::id())->update([
             'status' => 'failed'
         ]);
+
+        if ($updatedCount === 0) {
+            abort(404, 'Pesanan tidak ditemukan atau Anda tidak memiliki akses.');
+        }
 
         return redirect()->back()->with('success', 'Pesanan telah ditandai sebagai gagal diantarkan.');
     }
@@ -327,16 +335,17 @@ class OrderController extends Controller
     public function assignDriver(Request $request, int $id)
     {
         $request->validate([
-            'driver_id' => 'required|exists:users,id',
-            'delivery_ids' => 'required|array',
-            'delivery_ids.*' => 'exists:deliveries,id'
+            'driver_id' => 'required|exists:users,id'
         ]);
 
-        // Update driver_id pada tabel deliveries untuk item-item yang dipilih
-        Delivery::whereIn('id', $request->delivery_ids)->update([
-            'driver_id' => $request->driver_id
-        ]);
+        // 2. Update driver_id secara massal berdasarkan order_id
+        // Ini otomatis akan meng-assign semua menu di dalam invoice tersebut ke 1 driver
+        Delivery::where('order_id', $id)
+            ->whereNull('driver_id') // Pastikan hanya menimpa yang belum punya kurir
+            ->update([
+                'driver_id' => $request->driver_id
+            ]);
 
-        return redirect()->back()->with('success', 'Driver berhasil ditugaskan untuk pengantaran menu!');
+        return redirect()->back()->with('success', 'Driver berhasil ditugaskan untuk semua menu pada pesanan ini!');
     }
 }
