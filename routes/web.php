@@ -76,8 +76,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/admin/kelola-pesanan', [OrderController::class, 'adminIndex'])->name('orders.index');
         Route::get('/admin/kelola-pesanan/{id}', [OrderController::class, 'adminShow'])->name('orders.show');
-        Route::patch('/admin/kelola-pesanan/{id}/confirm', [OrderController::class, 'confirmPayment'])->name('orders.confirm');
         Route::post('/admin/kelola-pesanan/{id}/assign-driver', [OrderController::class, 'assignDriver'])->name('orders.assign_driver');
+        Route::post('/admin/kelola-pesanan/{id}/reassign-driver', [OrderController::class, 'reassignDriver'])->name('orders.reassign_driver');
 
         Route::resource('packages', AdminPackageController::class)->except(['show']);
     });

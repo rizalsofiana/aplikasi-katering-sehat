@@ -213,7 +213,7 @@ class OrderController extends Controller
     public function adminIndex()
     {
         // Ambil semua order, urutkan dari yang terbaru
-        $orders = Order::with('user')->latest()->get();
+        $orders = Order::with('user', 'deliveries')->latest()->get();
 
         return view('admin.order', compact('orders'));
     }
@@ -223,7 +223,7 @@ class OrderController extends Controller
         $order = Order::with(['user', 'items.menu'])->findOrFail($id);
 
         // Ambil antrean delivery berdasarkan menu dari order ini yang BELUM punya driver
-        $deliveries = Delivery::with('menu')
+        $deliveries = Delivery::with('menu', 'driver')
             ->whereIn('menu_id', $order->items->pluck('menu_id'))
             ->where('order_id', $id)
             ->get();
@@ -308,18 +308,23 @@ class OrderController extends Controller
         return redirect()->back()->with('success', 'Alhamdulillah, pesanan telah sukses diantarkan ke pelanggan!');
     }
 
-    public function updateStatusToFailed(int $id)
+    public function updateStatusToFailed(Request $request, int $id)
     {
-        // Pastikan delivery ini memang milik driver yang sedang login
+        $request->validate([
+            'failure_reason' => 'required|string|max:255'
+        ]);
+
+        // 2. Update status DAN simpan alasannya
         $updatedCount = Delivery::where('order_id', $id)->where('driver_id', Auth::id())->update([
-            'status' => 'failed'
+            'status' => 'failed',
+            'failure_reason' => $request->failure_reason // Ini kolom yang baru kita buat
         ]);
 
         if ($updatedCount === 0) {
             abort(404, 'Pesanan tidak ditemukan atau Anda tidak memiliki akses.');
         }
 
-        return redirect()->back()->with('success', 'Pesanan telah ditandai sebagai gagal diantarkan.');
+        return redirect()->back()->with('success', 'Pesanan ditandai gagal. Alasan telah dikirim ke Admin.');
     }
 
     // 3. Mengonfirmasi Pembayaran
@@ -347,5 +352,23 @@ class OrderController extends Controller
             ]);
 
         return redirect()->back()->with('success', 'Driver berhasil ditugaskan untuk semua menu pada pesanan ini!');
+    }
+
+    public function reassignDriver(Request $request, int $id)
+    {
+        $request->validate([
+            'driver_id' => 'required|exists:users,id'
+        ]);
+
+        // Update pesanan yang statusnya 'failed' pada invoice ini
+        Delivery::where('order_id', $id)
+            ->where('status', 'failed')
+            ->update([
+                'driver_id' => $request->driver_id, // Ganti dengan kurir baru
+                'status' => 'cooking',              // Kembalikan statusnya agar bisa diproses lagi (atau sesuaikan dengan status awal Anda)
+                'failure_reason' => null            // Bersihkan riwayat alasan gagal karena sudah ditangani
+            ]);
+
+        return redirect()->back()->with('success', 'Driver pengganti berhasil ditugaskan! Pesanan siap diantarkan kembali.');
     }
 }

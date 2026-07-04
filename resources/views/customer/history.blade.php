@@ -70,7 +70,8 @@
                                     Pembayaran</span>
                             @elseif($order->status == 'paid' || $order->status == 'paid')
                                 <span
-                                    class="bg-emerald-50 text-emerald-700 border border-emerald-100 text-[10px] font-bold px-2.5 py-0.5 rounded-md uppercase tracking-wider">Selesai</span>
+                                    class="bg-emerald-50 text-emerald-700 border border-emerald-100 text-[10px] font-bold px-2.5 py-0.5 rounded-md uppercase tracking-wider">Sudah
+                                    Dibayar</span>
                             @elseif($order->status == 'cancelled' || $order->status == 'failed')
                                 <span
                                     class="bg-rose-50 text-rose-700 border border-rose-100 text-[10px] font-bold px-2.5 py-0.5 rounded-md uppercase tracking-wider">Batal

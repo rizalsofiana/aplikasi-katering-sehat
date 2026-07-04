@@ -65,7 +65,7 @@
                                     </p>
                                 </div>
 
-                                <form action="{{ route('deliveries.take', $orderId) }}" method="POST">
+                                <form action="{{ route('deliveries.take', $firstDeliv->id) }}" method="POST">
                                     @csrf
                                     @method('PATCH')
                                     <button type="submit"
@@ -197,16 +197,63 @@
                                     </form>
                                 @elseif($firstDeliv->status == 'on_the_way')
                                     <div class="flex space-x-2 w-full justify-end">
-                                        <form action="{{ route('deliveries.failed', $orderId) }}" method="POST"
-                                            onsubmit="return confirm('Konfirmasi bahwa makanan batal diantarkan?')">
-                                            @csrf
-                                            @method('PATCH')
-                                            <button type="submit"
+                                        <!-- 💡 Tombol Gagal dibungkus Modal Alpine.js -->
+                                        <div x-data="{ showFailModal: false }">
+                                            <!-- Tombol Trigger Modal -->
+                                            <button type="button" @click="showFailModal = true"
                                                 class="bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-600 font-bold text-xs py-1.5 px-3 rounded-xl transition">
                                                 <span>✕ Gagal</span>
                                             </button>
-                                        </form>
 
+                                            <!-- Modal Overlay -->
+                                            <div x-show="showFailModal" x-cloak
+                                                class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 text-left">
+
+                                                <div @click.away="showFailModal = false"
+                                                    class="bg-white rounded-2xl p-6 shadow-xl w-full max-w-sm transform transition-all">
+
+                                                    <h3 class="text-lg font-bold text-slate-900 mb-1">Laporkan Kendala
+                                                    </h3>
+                                                    <p class="text-xs text-slate-500 mb-4">Pilih alasan mengapa pesanan
+                                                        ini gagal diantarkan.</p>
+
+                                                    <form action="{{ route('deliveries.failed', $orderId) }}"
+                                                        method="POST">
+                                                        @csrf
+                                                        @method('PATCH')
+
+                                                        <!-- Dropdown Alasan -->
+                                                        <div class="mb-5">
+                                                            <select name="failure_reason" required
+                                                                class="w-full text-sm border-slate-200 rounded-xl focus:ring-rose-500 focus:border-rose-500 text-slate-700">
+                                                                <option value="">-- Pilih Alasan --</option>
+                                                                <option value="Kendaraan bermasalah / Kecelakaan">
+                                                                    Kendaraan bermasalah / Kecelakaan</option>
+                                                                <option value="Alamat tidak ditemukan">Alamat tidak
+                                                                    ditemukan</option>
+                                                                <option value="Pelanggan tidak bisa dihubungi">Pelanggan
+                                                                    tidak bisa dihubungi</option>
+                                                                <option value="Makanan rusak / tumpah">Makanan rusak /
+                                                                    tumpah</option>
+                                                            </select>
+                                                        </div>
+
+                                                        <div class="flex gap-3">
+                                                            <button type="button" @click="showFailModal = false"
+                                                                class="flex-1 px-4 py-2 bg-slate-100 text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-200 transition">
+                                                                Batal
+                                                            </button>
+                                                            <button type="submit"
+                                                                class="flex-1 px-4 py-2 bg-rose-600 text-white font-bold text-xs rounded-xl hover:bg-rose-700 transition">
+                                                                Kirim Laporan
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Tombol Selesai Diantar (Tetap Sama) -->
                                         <form action="{{ route('deliveries.delivered', $orderId) }}" method="POST"
                                             onsubmit="return confirm('Konfirmasi bahwa makanan telah diterima oleh customer?')">
                                             @csrf

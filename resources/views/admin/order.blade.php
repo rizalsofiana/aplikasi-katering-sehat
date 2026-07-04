@@ -40,13 +40,22 @@
                                 <td class="p-4 font-bold text-slate-900">Rp
                                     {{ number_format($order->total_amount, 0, ',', '.') }}</td>
                                 <td class="p-4">
-                                    @if ($order->status == 'paid')
+                                    @if ($order->deliveries->contains('status', 'failed'))
                                         <span
-                                            class="bg-emerald-50 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-lg border border-emerald-100">Paid
-                                            (Lunas)</span>
+                                            class="bg-rose-50 text-rose-700 text-xs font-bold px-2.5 py-1 rounded-lg border border-rose-200 flex items-center w-max">
+                                            <span class="w-2 h-2 rounded-full bg-rose-500 mr-1.5 animate-pulse"></span>
+                                            Gagal Antar
+                                        </span>
+                                    @elseif ($order->status == 'paid')
+                                        <span
+                                            class="bg-emerald-50 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-lg border border-emerald-100">
+                                            Paid (Lunas)
+                                        </span>
                                     @else
                                         <span
-                                            class="bg-amber-50 text-amber-700 text-xs font-bold px-2.5 py-1 rounded-lg border border-amber-100">Pending</span>
+                                            class="bg-amber-50 text-amber-700 text-xs font-bold px-2.5 py-1 rounded-lg border border-amber-100">
+                                            Pending
+                                        </span>
                                     @endif
                                 </td>
                                 <td class="p-4 text-slate-400 text-xs">{{ $order->created_at->format('d M Y, H:i') }}
