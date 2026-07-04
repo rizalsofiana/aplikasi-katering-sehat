@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title>{{ config('app.name', 'Laravel') }}</title>
+    <link rel="icon" type="image/png" href="{{ asset('logo-katering-sehat.png') }}" />
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -221,6 +222,15 @@
         <p class="mt-1 text-slate-400">Dibuat dengan penuh nutrisi untuk gaya hidup perkantoran yang lebih baik.</p>
     </footer>
 
+    @if (session('success'))
+        <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 3000)" x-show="show"
+            class="fixed top-5 right-5 z-50 bg-emerald-500 text-white px-6 py-3 rounded-xl shadow-lg border border-emerald-600 transition-all duration-500">
+            <div class="flex items-center space-x-2">
+                <span>✓</span>
+                <p class="text-sm font-medium">{{ session('success') }}</p>
+            </div>
+        </div>
+    @endif
 </body>
 
 </html>

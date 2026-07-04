@@ -81,9 +81,9 @@
                         Kelola Langganan
                     </a>
                     <div class="pt-4 border-t border-slate-100">
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit"
+                        <div x-data="{ showLogoutConfirm: false }" class="relative">
+                            <!-- Tombol Keluar (Trigger) -->
+                            <button type="button" @click="showLogoutConfirm = true"
                                 class="w-full flex text-left px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                     fill="currentColor" class="bi bi-door-open-fill me-2" viewBox="0 0 16 16">
@@ -92,7 +92,51 @@
                                 </svg>
                                 Keluar Sistem
                             </button>
-                        </form>
+
+                            <!-- Overlay & Modal -->
+                            <div x-show="showLogoutConfirm" x-cloak
+                                class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4"
+                                x-transition:enter="transition ease-out duration-300"
+                                x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                                x-transition:leave="transition ease-in duration-200"
+                                x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+
+                                <!-- Kotak Modal -->
+                                <div @click.away="showLogoutConfirm = false"
+                                    class="bg-white rounded-2xl p-6 shadow-xl w-full max-w-sm text-center transform transition-all">
+
+                                    <div
+                                        class="w-12 h-12 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+                                            viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                        </svg>
+                                    </div>
+
+                                    <h3 class="text-lg font-bold text-slate-900">Konfirmasi Keluar</h3>
+                                    <p class="text-sm text-slate-500 mt-2">Apakah Anda yakin ingin mengakhiri sesi dan
+                                        keluar dari akun?</p>
+
+                                    <div class="mt-6 flex gap-3">
+                                        <!-- Tombol Batal -->
+                                        <button type="button" @click="showLogoutConfirm = false"
+                                            class="flex-1 px-4 py-2 bg-slate-100 text-slate-700 font-bold text-sm rounded-xl hover:bg-slate-200 transition">
+                                            Batal
+                                        </button>
+
+                                        <!-- Form Logout -->
+                                        <form method="POST" action="{{ route('logout') }}" class="flex-1">
+                                            @csrf
+                                            <button type="submit"
+                                                class="w-full px-4 py-2 bg-rose-600 text-white font-bold text-sm rounded-xl hover:bg-rose-700 transition">
+                                                Ya, Keluar
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </aside>
