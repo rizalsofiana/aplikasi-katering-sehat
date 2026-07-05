@@ -5,6 +5,7 @@ use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\UserController;
 use App\Models\Delivery;
@@ -80,6 +81,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/admin/kelola-pesanan/{id}/reassign-driver', [OrderController::class, 'reassignDriver'])->name('orders.reassign_driver');
 
         Route::resource('packages', AdminPackageController::class)->except(['show']);
+
+        Route::get('/admin/sales-report', [ReportController::class, 'salesReport'])->name('reports.sales');
     });
 
     Route::middleware(['role:nutritionist'])->group(function () {
