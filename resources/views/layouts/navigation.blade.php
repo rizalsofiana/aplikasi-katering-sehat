@@ -51,8 +51,8 @@
                             class="inline-flex items-center px-1 pt-1 border-b-2 {{ request()->routeIs('deliveries.index') ? 'border-emerald-500 text-emerald-600 font-bold' : 'border-transparent text-slate-500 hover:text-emerald-600 hover:border-emerald-300' }} text-sm font-medium leading-5 transition duration-150 ease-in-out">
                             Dashboard
                         </a>
-                        <a href=""
-                            class="inline-flex items-center px-1 pt-1 border-b-2 {{ request()->routeIs('driver.delivery-history') ? 'border-emerald-500 text-emerald-600 font-bold' : 'border-transparent text-slate-500 hover:text-emerald-600 hover:border-emerald-300' }} text-sm font-medium leading-5 transition duration-150 ease-in-out">
+                        <a href="{{ route('deliveries.histories') }}"
+                            class="inline-flex items-center px-1 pt-1 border-b-2 {{ request()->routeIs('deliveries.histories') ? 'border-emerald-500 text-emerald-600 font-bold' : 'border-transparent text-slate-500 hover:text-emerald-600 hover:border-emerald-300' }} text-sm font-medium leading-5 transition duration-150 ease-in-out">
                             Riwayat Pengantaran
                         </a>
                     @endif
@@ -161,8 +161,8 @@
             @elseif(Auth::user()->role === 'driver')
                 <a href="{{ route('dashboard') }}"
                     class="block ps-3 pr-4 py-2 border-l-4 {{ request()->routeIs('deliveries.index') ? 'border-emerald-500 text-emerald-700 bg-emerald-50/50 font-bold' : 'border-transparent text-slate-600' }} text-base font-medium">Dashboard</a>
-                <a href=""
-                    class="block ps-3 pr-4 py-2 border-l-4 {{ request()->routeIs('driver.antaran') ? 'border-emerald-500 text-emerald-700 bg-emerald-50/50 font-bold' : 'border-transparent text-slate-600 hover:text-emerald-700' }} text-base font-medium">Riwayat
+                <a href="{{ route('deliveries.histories') }}"
+                    class="block ps-3 pr-4 py-2 border-l-4 {{ request()->routeIs('deliveries.histories') ? 'border-emerald-500 text-emerald-700 bg-emerald-50/50 font-bold' : 'border-transparent text-slate-600 hover:text-emerald-700' }} text-base font-medium">Riwayat
                     Pengantaran</a>
             @endif
 

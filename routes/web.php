@@ -90,6 +90,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::middleware(['role:driver'])->group(function () {
         Route::get('/deliveries', [OrderController::class, 'driverIndex'])->name('deliveries.index');
+        Route::get('/delivery/histories', [OrderController::class, 'history'])->name('deliveries.histories');
         // Driver ambil orderan kosong
         Route::patch('/deliveries/{id}/take', [OrderController::class, 'takeOrder'])->name('deliveries.take');
         // Driver ubah status jadi otw

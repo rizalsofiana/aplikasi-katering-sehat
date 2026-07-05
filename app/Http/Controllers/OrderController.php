@@ -327,6 +327,18 @@ class OrderController extends Controller
         return redirect()->back()->with('success', 'Pesanan ditandai gagal. Alasan telah dikirim ke Admin.');
     }
 
+    public function history()
+    {
+        $groupedDeliveries = Delivery::with(['menu', 'order.user'])
+            ->has('order')
+            ->where('driver_id', Auth::id())
+            ->where('status', 'delivered')
+            ->latest('updated_at') // Urutkan dari yang paling baru diselesaikan
+            ->paginate(10);
+
+        return view('driver.history', compact('groupedDeliveries'));
+    }
+
     // 3. Mengonfirmasi Pembayaran
     public function confirmPayment(int $id)
     {
