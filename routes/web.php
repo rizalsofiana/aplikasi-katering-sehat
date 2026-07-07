@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminPackageController;
+use App\Http\Controllers\ConsultationController;
 use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\OrderController;
@@ -8,7 +9,9 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\UserController;
+use App\Models\Consultation;
 use App\Models\Delivery;
+use App\Models\Menu;
 use App\Models\Order;
 use App\Models\Subscription;
 use App\Models\User;
@@ -41,7 +44,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             return view('admin.admin', compact('totalUser', 'activeOrder', 'totalDriver', 'incomeMonthly'));
         } elseif ($user->role === 'nutritionist') {
-            return view('nutritionist.nutritionist', compact('profile'));
+            $antreanKonsultasi = Consultation::where('status', 'open')
+                ->whereNull('nutritionist_id')->count();
+
+            $menuTerkompilasiAI = Menu::count();
+            return view('nutritionist.nutritionist', compact('antreanKonsultasi', 'menuTerkompilasiAI', 'profile'));
         } elseif ($user->role === 'driver') {
             return redirect()->route('deliveries.index');
         }
@@ -89,14 +96,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/nutritionist/konsultasi', function () {
             return view('nutritionist.consultation');
         })->name('nutritionist.consultation');
+
+        // Tambahkan ini di dalam group middleware nutritionist Anda
+        Route::get('/nutritionist/consultation', [ConsultationController::class, 'nutritionistIndex'])->name('nutritionist.consultation.index');
+        Route::get('/nutritionist/consultation/{id}', [ConsultationController::class, 'show'])->name('nutritionist.consultation.show');
+        Route::post('/nutritionist/consultation/{id}/reply', [ConsultationController::class, 'reply'])->name('nutritionist.consultation.reply');
+        Route::post('/nutritionist/consultation/{id}/close', [ConsultationController::class, 'close'])->name('nutritionist.consultation.close');
     });
 
     Route::middleware(['role:driver'])->group(function () {
         Route::get('/deliveries', [OrderController::class, 'driverIndex'])->name('deliveries.index');
         Route::get('/delivery/histories', [OrderController::class, 'history'])->name('deliveries.histories');
-        // Driver ambil orderan kosong
         Route::patch('/deliveries/{id}/take', [OrderController::class, 'takeOrder'])->name('deliveries.take');
-        // Driver ubah status jadi otw
         Route::patch('/deliveries/{id}/otw', [OrderController::class, 'updateStatusToOnTheWay'])->name('deliveries.otw');
         Route::patch('/deliveries/{id}/delivered', [OrderController::class, 'updateStatusToDelivered'])->name('deliveries.delivered');
         Route::patch('/deliveries/{id}/failed', [OrderController::class, 'updateStatusToFailed'])->name('deliveries.failed');
@@ -115,6 +126,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Route Webhook Callback dari Midtrans (Wajib di luar middleware auth/csrf jika bisa)
         Route::post('/midtrans/callback', [OrderController::class, 'callback'])->name('midtrans.callback');
+
+        // Tambahkan ini di dalam group middleware customer
+        Route::get('/customer/consultation', [ConsultationController::class, 'index'])->name('customer.consultation.index');
+
+        Route::post('/customer/consultation', [ConsultationController::class, 'store'])->name('customer.consultation.store');
+        // Melihat obrolan
+        Route::get('/customer/consultation/{id}', [ConsultationController::class, 'show'])->name('customer.consultation.show');
+        // Mengirim balasan
+        Route::post('/customer/consultation/{id}/reply', [ConsultationController::class, 'reply'])->name('customer.consultation.reply');
+        // Menutup konsultasi
+        Route::post('/customer/consultation/{id}/close', [ConsultationController::class, 'close'])->name('customer.consultation.close');
     });
 
 

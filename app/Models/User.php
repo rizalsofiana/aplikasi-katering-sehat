@@ -48,4 +48,14 @@ class User extends Authenticatable
     {
         return $this->hasOne(DriverDetail::class);
     }
+
+    public function consultationsAsCustomer()
+    {
+        return $this->hasMany(Consultation::class, 'customer_id');
+    }
+
+    public function consultationsAsNutritionist()
+    {
+        return $this->hasMany(Consultation::class, 'nutritionist_id');
+    }
 }
