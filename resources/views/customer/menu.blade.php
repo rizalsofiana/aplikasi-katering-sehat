@@ -295,7 +295,7 @@
                     </button>
                 </form>
 
-                <div x-show="openMapModal"
+                <div x-show="openMapModal" x-cloak
                     class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs"
                     x-transition>
                     <div class="bg-white rounded-2xl max-w-lg w-full p-5 space-y-4 shadow-xl border border-slate-100"
