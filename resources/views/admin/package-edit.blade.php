@@ -30,7 +30,7 @@
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Deskripsi Paket</label>
                     <textarea name="description" value="{{ old('description', $package->description) }}" rows="3"
                         placeholder="Contoh: Paket ini mencakup menu makan siang dan malam kaya serat..."
-                        class="block w-full rounded-xl border-slate-200 text-sm focus:border-emerald-500 focus:ring-emerald-500 shadow-sm">{{ old('description') }}</textarea>
+                        class="block w-full rounded-xl border-slate-200 text-sm focus:border-emerald-500 focus:ring-emerald-500 shadow-sm">{{ old('description', $package->description) }}</textarea>
                     @error('description')
                         <p class="text-xs text-rose-500 mt-1">{{ $message }}</p>
                     @enderror
