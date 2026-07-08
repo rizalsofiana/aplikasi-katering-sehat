@@ -25,14 +25,53 @@
                 @endif
 
                 @if ($consultation->status !== 'closed')
-                    <form action="{{ route('customer.consultation.close', $consultation->id) }}" method="POST"
-                        onsubmit="return confirm('Apakah Anda ingin mengakhiri sesi konsultasi ini?')">
-                        @csrf
-                        <button type="submit"
+                    <div x-data="{ openConfirm: false }">
+                        <button type="button" @click="openConfirm = true"
                             class="text-xs bg-red-50 hover:bg-red-100 text-red-600 font-bold px-3 py-1.5 rounded-full transition border border-red-100">
                             Akhiri Sesi
                         </button>
-                    </form>
+
+                        <div x-show="openConfirm" x-cloak
+                            class="fixed inset-0 z-[150] overflow-y-auto flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs"
+                            x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-150"
+                            x-transition:leave-start="opacity-100 scale-100"
+                            x-transition:leave-end="opacity-0 scale-95">
+
+                            <div class="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-xl border border-slate-100"
+                                @click.away="openConfirm = false">
+
+                                <div class="text-center space-y-2">
+                                    <div
+                                        class="w-12 h-12 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto text-xl">
+                                        ⚠️
+                                    </div>
+                                    <h3 class="font-bold text-slate-900 text-base">Akhiri Sesi Konsultasi?</h3>
+                                    <p class="text-xs text-slate-500 leading-relaxed">
+                                        Apakah Anda yakin ingin menyelesaikan sesi ini? Setelah ditutup, Anda tidak
+                                        dapat mengirim pesan lagi di obrolan ini.
+                                    </p>
+                                </div>
+
+                                <div class="flex space-x-2 pt-2">
+                                    <button type="button" @click="openConfirm = false"
+                                        class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 rounded-xl text-xs transition border border-slate-200">
+                                        Kembali
+                                    </button>
+
+                                    <form action="{{ route('customer.consultation.close', $consultation->id) }}"
+                                        method="POST" class="flex-1">
+                                        @csrf
+                                        <button type="submit"
+                                            class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-2 rounded-xl text-xs transition shadow-md shadow-rose-100">
+                                            Ya, Akhiri
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 @endif
             </div>
         </div>

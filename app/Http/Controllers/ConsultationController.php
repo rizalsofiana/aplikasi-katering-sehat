@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Consultation;
 use App\Models\ConsultationMessage;
+use App\Models\Subscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -15,11 +16,22 @@ class ConsultationController extends Controller
 
     public function index()
     {
-        // Mengambil riwayat konsultasi milik customer yang sedang login
+        $hasActiveSubscription = Subscription::where('user_id', Auth::id())
+            ->where('status', 'active') // 💡 Sesuaikan string 'active' dengan isi database-mu (misal: 'aktif' atau 'active')
+            ->where('end_date', '>=', now())
+            ->exists();
+
+        // 2. Jika tidak memiliki langganan aktif, alihkan ke halaman pembelian paket
+        if (!$hasActiveSubscription) {
+            return redirect()->back() // 💡 Sesuaikan nama route halaman beli paketmu
+                ->with('error', 'Akses ditolak! Anda harus memiliki paket langganan aktif untuk berkonsultasi dengan Ahli Gizi.');
+        }
+
+        // 3. Jika lolos validasi, ambil riwayat konsultasi seperti biasa
         $consultations = Consultation::with('nutritionist')
             ->where('customer_id', Auth::id())
             ->latest()
-            ->paginate(10); // Menggunakan pagination agar rapi jika riwayatnya banyak
+            ->paginate(10);
 
         return view('customer.consultation', compact('consultations'));
     }

@@ -21,6 +21,67 @@
 </head>
 
 <body class="font-sans antialiased">
+    <div x-data="{
+        show: false,
+        message: '',
+        type: 'success',
+        initToast() {
+            // Mendengarkan event 'show-toast' dari mana saja
+            window.addEventListener('show-toast', (event) => {
+                this.message = event.detail.message;
+                this.type = event.detail.type;
+                this.show = true;
+    
+                // Toast akan hilang otomatis setelah 4 detik
+                setTimeout(() => { this.show = false }, 4000);
+            });
+        }
+    }" x-init="initToast()" class="fixed top-5 right-5 z-[200] flex flex-col gap-2">
+        <div x-show="show" x-cloak x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 translate-x-8" x-transition:enter-end="opacity-100 translate-x-0"
+            x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 translate-x-0"
+            x-transition:leave-end="opacity-0 translate-x-8"
+            :class="{
+                'bg-rose-50 border-rose-500 text-rose-700': type === 'error',
+                'bg-emerald-50 border-emerald-500 text-emerald-700': type === 'success'
+            }"
+            class="flex items-center gap-3 px-4 py-3 border-l-4 rounded-xl shadow-lg min-w-[320px] max-w-sm bg-white">
+            <div>
+                <template x-if="type === 'error'">
+                    <div class="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </template>
+                <template x-if="type === 'success'">
+                    <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7">
+                            </path>
+                        </svg>
+                    </div>
+                </template>
+            </div>
+
+            <p class="text-sm font-medium flex-1 leading-snug" x-text="message"></p>
+
+            <button type="button" @click="show = false" class="text-slate-400 hover:text-slate-600 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </button>
+        </div>
+    </div>
+    @if (session('error'))
+        <div x-data x-init="$dispatch('show-toast', { message: '{{ session('error') }}', type: 'error' })"></div>
+    @endif
+
+    @if (session('success'))
+        <div x-data x-init="$dispatch('show-toast', { message: '{{ session('success') }}', type: 'success' })"></div>
+    @endif
     @if (Auth::user()->role === 'admin')
         <div x-data="{ sidebarOpen: false }" class="flex min-h-screen relative bg-slate-50">
 

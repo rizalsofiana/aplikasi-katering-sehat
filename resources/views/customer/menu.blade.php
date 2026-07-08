@@ -7,28 +7,43 @@
         lng: '',
         search: '',
     
+        // 💡 1. Tambahkan State untuk Toast
+        toast: { show: false, message: '', type: 'error' },
+    
+        // 💡 2. Buat Fungsi Pemanggil Toast
+        showToast(message, type = 'error') {
+            this.toast.message = message;
+            this.toast.type = type;
+            this.toast.show = true;
+    
+            // Otomatis hilang setelah 3 detik
+            setTimeout(() => {
+                this.toast.show = false;
+            }, 3000);
+        },
+    
         addMenu(id, name, price, calories, stock) {
             let item = this.cart.find(i => i.id === id);
     
             if (item) {
-                // Cek apakah jumlah di keranjang sudah mencapai batas stok
                 if (item.qty < stock) {
                     item.qty++;
                 } else {
-                    // Tampilkan pesan error jika melebihi stok
-                    alert(`Maaf, sisa stok untuk ${name} hanya ${stock} porsi.`);
+                    // 💡 Panggil Toast alih-alih alert
+                    this.showToast(`Maaf, sisa stok untuk ${name} hanya ${stock} porsi.`, 'warning');
                 }
             } else {
-                // Pastikan menu ditambahkan beserta informasi batas stoknya
                 if (stock > 0) {
                     this.cart.push({
                         id: id,
                         name: name,
                         price: Number(price),
                         calories: calories,
-                        stock: Number(stock), // 💡 Simpan batas stok di objek keranjang
+                        stock: Number(stock),
                         qty: 1
                     });
+                } else {
+                    this.showToast(`Maaf, stok ${name} sudah habis.`, 'error');
                 }
             }
         },
@@ -45,7 +60,11 @@
         get totalCalories() { return this.cart.reduce((sum, item) => sum + (item.calories * item.qty), 0); },
     
         async processOrder() {
-            if (this.cart.length === 0) return;
+            if (this.cart.length === 0) {
+                this.showToast('Keranjang belanja Anda masih kosong.', 'warning');
+                return;
+            }
+    
             this.isLoading = true;
     
             const formData = new FormData(document.getElementById('order-form'));
@@ -67,32 +86,90 @@
     
                 if (response.ok && result.snap_token) {
                     window.snap.pay(result.snap_token, {
-                        onSuccess: function(statusResult) {
-                            window.location.href = '{{ route('customer.orders.index') }}?status=success';
+                        // 💡 3. Ubah menjadi Arrow Function agar 'this' merujuk ke Alpine
+                        onSuccess: (statusResult) => {
+                            // Tampilkan toast sukses
+                            this.showToast('Pembayaran berhasil diproses!.', 'success');
+    
+                            // Beri delay sebelum redirect agar pengguna bisa membaca toast
+                            setTimeout(() => {
+                                window.location.href = '{{ route('customer.orders.index') }}?status=success';
+                            }, 2500);
                         },
-                        onPending: function(statusResult) {
-                            window.location.href = '{{ route('customer.orders.index') }}?status=pending';
+                        onPending: (statusResult) => {
+                            // Tampilkan toast peringatan/pending
+                            this.showToast('Menunggu pembayaran diselesaikan.', 'warning');
+    
+                            // Beri delay sebelum redirect
+                            setTimeout(() => {
+                                window.location.href = '{{ route('customer.orders.index') }}?status=pending';
+                            }, 2500);
                         },
-                        onError: function(statusResult) {
-                            alert('Pembayaran gagal, silakan coba lagi dari riwayat pesanan.');
-                            window.location.reload();
+                        onError: (statusResult) => {
+                            this.showToast('Pembayaran gagal, silakan coba lagi dari riwayat pesanan.', 'error');
+                            setTimeout(() => { window.location.reload(); }, 2500);
                         },
-                        onClose: function() {
-                            alert('Anda menutup halaman pembayaran. Pesanan Anda tersimpan sebagai pending.');
-                            window.location.reload();
+                        onClose: () => {
+                            this.showToast('Anda menutup halaman pembayaran. Pesanan disimpan sebagai pending.', 'warning');
+                            setTimeout(() => { window.location.reload(); }, 2500);
                         }
                     });
                 } else {
-                    alert(result.message || 'Terjadi kesalahan sistem.');
+                    this.showToast(result.message || 'Terjadi kesalahan sistem.', 'error');
                 }
             } catch (error) {
                 console.error(error);
-                alert('Gagal memproses pesanan.');
+                this.showToast('Gagal memproses pesanan. Periksa koneksi internet Anda.', 'error');
             } finally {
                 this.isLoading = false;
             }
         }
     }" class="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
+
+        <div x-show="toast.show" style="display: none;" x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 translate-y-10 sm:translate-y-0 sm:scale-95 sm:translate-x-10"
+            x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100 sm:translate-x-0"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100 sm:translate-x-0"
+            x-transition:leave-end="opacity-0 translate-y-10 sm:translate-y-0 sm:scale-95 sm:translate-x-10"
+            class="fixed bottom-5 right-5 sm:top-5 sm:bottom-auto sm:right-5 z-[100] flex items-center p-4 w-full max-w-sm rounded-2xl shadow-xl border"
+            :class="{
+                'bg-rose-50 border-rose-200 text-rose-700': toast.type === 'error',
+                'bg-emerald-50 border-emerald-200 text-emerald-700': toast.type === 'success',
+                'bg-amber-50 border-amber-200 text-amber-700': toast.type === 'warning'
+            }"
+            role="alert">
+
+            <svg x-show="toast.type === 'error'" class="flex-shrink-0 w-6 h-6 mr-3" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <svg x-show="toast.type === 'success'" class="flex-shrink-0 w-6 h-6 mr-3" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <svg x-show="toast.type === 'warning'" class="flex-shrink-0 w-6 h-6 mr-3" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+
+            <div class="font-semibold text-sm" x-text="toast.message"></div>
+
+            <button @click="toast.show = false" type="button"
+                class="ml-auto -mx-1.5 -my-1.5 p-1.5 rounded-xl transition focus:outline-none focus:ring-2"
+                :class="{
+                    'hover:bg-rose-100 focus:ring-rose-400 text-rose-500': toast.type === 'error',
+                    'hover:bg-emerald-100 focus:ring-emerald-400 text-emerald-500': toast.type === 'success',
+                    'hover:bg-amber-100 focus:ring-amber-400 text-amber-500': toast.type === 'warning'
+                }">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
 
         <div
             class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -252,8 +329,9 @@
                                 class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Tanggal
                                 Pengiriman</label>
                             <input type="date" id="delivery_date"
-                                min="{{ \Carbon\Carbon::today('Asia/Jakarta')->format('Y-m-d') }}" name="delivery_date"
-                                class="block w-full rounded-xl border-slate-200 text-xs" required>
+                                min="{{ \Carbon\Carbon::today('Asia/Jakarta')->format('Y-m-d') }}"
+                                name="delivery_date" class="block w-full rounded-xl border-slate-200 text-xs"
+                                required>
                         </div>
 
                         <div>
