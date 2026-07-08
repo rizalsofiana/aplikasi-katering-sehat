@@ -62,7 +62,7 @@
                             </p>
 
                             <p class="text-[10px] text-slate-400 uppercase tracking-wide font-bold pt-1">
-                                {{ $package->total_days }} Hari Full Program</p>
+                                {{ $package->total_days }} Hari Full Akses</p>
                         </div>
 
                         <div class="flex items-baseline">
