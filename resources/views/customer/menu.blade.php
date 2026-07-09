@@ -189,12 +189,57 @@
             </div>
         </div>
 
+        <div x-data="{
+            isLoading: false,
+            recommendationData: null,
+        
+            async fetchRecommendation() {
+                this.isLoading = true;
+                try {
+                    const response = await fetch('{{ route('customer.orders.ai') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        this.recommendationData = data.recommendation;
+                    } else {
+                        console.log('Error dari Google:', data.google_error);
+                        alert(data.error + ' - Silakan cek Inspect Element -> Console untuk detailnya.');
+                    }
+                } catch (error) {
+                    console.error(error);
+                } finally {
+                    this.isLoading = false;
+                }
+            }
+        }">
+            <button @click="fetchRecommendation" :disabled="isLoading"
+                class="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out">
+                <span x-text="isLoading ? 'Menganalisis profil Anda...' : '✨ Dapatkan Rekomendasi Menu AI'"></span>
+            </button>
+
+            <div x-show="recommendationData" class="mt-4 p-4 bg-emerald-50 rounded-xl border border-emerald-200"
+                x-cloak>
+                <h4 class="font-bold text-emerald-800">Rekomendasi Ahli Gizi AI:</h4>
+                <p class="text-sm text-slate-600 mt-1" x-text="recommendationData?.reasoning"></p>
+                <p class="text-xs font-semibold text-emerald-700 mt-2">
+                    Total Energi Rekomendasi: <span x-text="recommendationData?.total_calories_recommended"></span>
+                    Kkal
+                </p>
+            </div>
+        </div>
+
         @if (session('success'))
             <div
                 class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl text-sm font-semibold">
                 🎉 {{ session('success') }}
             </div>
-        @endif/
+        @endif
+
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
 

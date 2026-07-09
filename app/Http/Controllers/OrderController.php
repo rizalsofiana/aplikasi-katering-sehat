@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Midtrans\Config;
@@ -23,6 +24,88 @@ class OrderController extends Controller
         $userProfile = Auth::user()->profile;
 
         return view('customer.menu', compact('menus', 'userProfile'));
+    }
+
+    // 2. Fungsi Khusus: Dipanggil via AJAX oleh Alpine.js untuk generate AI
+    public function getAiRecommendation()
+    {
+        $userProfile = Auth::user()->profile;
+
+        if (!$userProfile) {
+            return response()->json(['error' => 'Silakan lengkapi profil nutrisi Anda terlebih dahulu.'], 400);
+        }
+
+        $dailyCalorieTarget = $userProfile->daily_calorie_target;
+
+        // =========================================================
+        // AMBIL KATALOG MENU & PILIH REKOMENDASI VIA GEMINI
+        // =========================================================
+        $availableMenus = Menu::with('nutrition')
+            ->where('is_available', true)
+            ->get()
+            ->map(function ($menu) {
+                return [
+                    'id' => $menu->id,
+                    'name' => $menu->name,
+                    'calories' => $menu->nutrition->calories ?? 0,
+                    'protein_g' => $menu->nutrition->protein_g ?? 0,
+                    'carbs_g' => $menu->nutrition->carbs_g ?? 0,
+                    'fat_g' => $menu->nutrition->fat_g ?? 0,
+                ];
+            })->toArray();
+
+        $allergies = $userProfile->allergies ?: 'Tidak ada alergi';
+
+        $prompt = "
+            Anda adalah Ahli Gizi Profesional KateringSehat.AI. 
+            Tugas Anda adalah merekomendasikan 3 menu makanan (Pagi, Siang, Malam) dari 'Daftar Menu' yang disediakan, agar total kalorinya mendekati target kalori harian pelanggan. Jangan pilih menu yang memicu alergi mereka.
+
+            Data Pelanggan:
+            - Target Kalori Harian: {$dailyCalorieTarget} Kkal
+            - Tujuan Diet: {$userProfile->diet_goal}
+            - Alergi: {$allergies}
+
+            Daftar Menu Tersedia:
+            " . json_encode($availableMenus) . "
+
+            Balas HANYA menggunakan struktur JSON persis seperti berikut tanpa markdown ataupun teks basi-basi:
+            {
+                \"reasoning\": \"Penjelasan singkat mengapa kombinasi ini cocok.\",
+                \"total_calories_recommended\": 1800,
+                \"meals\": {
+                    \"breakfast_menu_id\": 1,
+                    \"lunch_menu_id\": 2,
+                    \"dinner_menu_id\": 3
+                }
+            }
+        ";
+
+        $apiKey = env('GEMINI_API_KEY');
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}";
+
+        try {
+            $response = Http::withoutVerifying()->post($url, [
+                'contents' => [['parts' => [['text' => $prompt]]]],
+                'generationConfig' => ['response_mime_type' => 'application/json']
+            ]);
+
+            if ($response->successful()) {
+                $geminiOutput = $response->json('candidates.0.content.parts.0.text');
+                return response()->json([
+                    'status' => 'success',
+                    'target_calorie' => $dailyCalorieTarget,
+                    'recommendation' => json_decode($geminiOutput, true)
+                ]);
+            }
+
+            return response()->json([
+                'error' => 'Ditolak oleh Google API',
+                'google_status_code' => $response->status(), // Menampilkan kode HTTP dari Google (misal 400 atau 403)
+                'google_raw_response' => $response->json() // Menampilkan pesan salahnya apa
+            ], 500);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function store(Request $request)
