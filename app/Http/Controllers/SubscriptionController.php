@@ -20,12 +20,24 @@ class SubscriptionController extends Controller
     public function index()
     {
         $packages = Package::all();
+        $userId = Auth::id();
+
+        // Gunakan zona waktu yang sesuai agar pergantian hari presisi
+        $today = Carbon::today('Asia/Jakarta');
+
+        // 1. SWEEPING OTOMATIS (Lazy Update)
+        // Cari langganan user ini yang masih 'active' tapi end_date-nya sudah lewat dari hari ini
+        // Lalu langsung update statusnya di tabel database menjadi 'completed'
+        Subscription::where('user_id', $userId)
+            ->where('status', 'active')
+            ->whereDate('end_date', '<', $today)
+            ->update(['status' => 'completed']);
 
         // Mengambil langganan aktif milik user saat ini (jika ada)
         $activeSubscription = Subscription::with('package')
             ->where('user_id', Auth::id())
             ->where('status', 'active')
-            ->where('end_date', '>=', Carbon::today())
+            ->where('end_date', '>=', Carbon::today('Asia/Jakarta'))
             ->first();
 
         return view('customer.subscription', compact('packages', 'activeSubscription'));
@@ -39,7 +51,7 @@ class SubscriptionController extends Controller
         $package = Package::findOrFail($packageId);
 
         // Hitung simulasi tanggal jika langganan dimulai hari ini
-        $startDate = Carbon::today();
+        $startDate = Carbon::today('Asia/Jakarta');
         $endDate = $startDate->copy()->addDays($package->total_days);
 
         return view('customer.subscriptionOrder', compact('package', 'startDate', 'endDate'));
@@ -63,7 +75,7 @@ class SubscriptionController extends Controller
             ->where('end_date', '>=', Carbon::today())
             ->first();
 
-        $startDate = $existingActive ? Carbon::parse($existingActive->end_date)->addDay() : Carbon::today();
+        $startDate = $existingActive ? Carbon::parse($existingActive->end_date)->addDay() : Carbon::today('Asia/Jakarta');
         $endDate = $startDate->copy()->addDays($package->total_days);
 
         // 2. Simpan Data Langganan (Status PENDING)
@@ -72,7 +84,7 @@ class SubscriptionController extends Controller
             'package_id' => $package->id,
             'start_date' => $startDate->format('Y-m-d'),
             'end_date' => $endDate->format('Y-m-d'),
-            'status' => 'pending', // Ubah menjadi pending karena belum dibayar
+            'status' => 'active', // Ubah menjadi pending karena belum dibayar
         ]);
 
         // 3. Simpan Data Transaksi Pembayaran

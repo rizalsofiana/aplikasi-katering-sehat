@@ -31,8 +31,9 @@
                 <div class="bg-white/10 px-4 py-2 rounded-xl text-center border border-white/10">
                     <p class="text-[10px] uppercase font-bold text-emerald-200">Sisa Waktu</p>
                     <p class="text-xl font-black">
-                        {{ \Carbon\Carbon::today()->diffInDays(\Carbon\Carbon::parse($activeSubscription->end_date), false) }}
-                        Hari Lagi</p>
+                        {{ (int) \Carbon\Carbon::today('Asia/Jakarta')->diffInDays(\Carbon\Carbon::parse($activeSubscription->end_date), false) }}
+                        Hari Lagi
+                    </p>
                 </div>
             </div>
         @endif
