@@ -31,6 +31,7 @@ class ProfileController extends Controller
             'height_cm' => ['required', 'numeric', 'min:100', 'max:250'],
             'activity_level' => ['required', 'in:sedentary,lightly_active,moderately_active,very_active'],
             'diet_goal' => ['required', 'in:weight_loss,maintenance,weight_gain'],
+            'allergies' => ['nullable', 'string', 'max:255'],
         ]);
 
         $weight = $request->weight_kg;
@@ -70,6 +71,7 @@ class ProfileController extends Controller
             'activity_level' => $request->activity_level,
             'diet_goal' => $request->diet_goal,
             'daily_calorie_target' => round($dailyCalorieTarget),
+            'allergies' => $request->allergies,
         ]);
 
         return redirect()->back()->with('success', 'Data profil kesehatan berhasil disimpan!');
