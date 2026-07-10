@@ -6,42 +6,59 @@
         lat: '',
         lng: '',
         search: '',
+        recommendationData: null,
+        recommendedMeals: {},
     
-        // 💡 1. Tambahkan State untuk Toast
+        async fetchRecommendation() {
+            this.isLoading = true;
+            this.recommendedMeals = {};
+            try {
+                const response = await fetch('{{ route('customer.orders.ai') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    this.recommendationData = data.recommendation;
+                    const meals = data.recommendation.meals;
+                    this.recommendedMeals = {
+                        [meals.breakfast_menu_id]: 'Sarapan 🌅',
+                        [meals.lunch_menu_id]: 'Makan Siang ☀️',
+                        [meals.dinner_menu_id]: 'Makan Malam 🌙'
+                    };
+                } else {
+                    alert(data.error || 'Gagal memproses');
+                }
+            } catch (error) {
+                console.error(error);
+            } finally {
+                this.isLoading = false;
+            }
+        },
+    
         toast: { show: false, message: '', type: 'error' },
     
-        // 💡 2. Buat Fungsi Pemanggil Toast
         showToast(message, type = 'error') {
             this.toast.message = message;
             this.toast.type = type;
             this.toast.show = true;
-    
-            // Otomatis hilang setelah 3 detik
-            setTimeout(() => {
-                this.toast.show = false;
-            }, 3000);
+            setTimeout(() => { this.toast.show = false; }, 3000);
         },
     
         addMenu(id, name, price, calories, stock) {
             let item = this.cart.find(i => i.id === id);
-    
             if (item) {
                 if (item.qty < stock) {
                     item.qty++;
                 } else {
-                    // 💡 Panggil Toast alih-alih alert
                     this.showToast(`Maaf, sisa stok untuk ${name} hanya ${stock} porsi.`, 'warning');
                 }
             } else {
                 if (stock > 0) {
-                    this.cart.push({
-                        id: id,
-                        name: name,
-                        price: Number(price),
-                        calories: calories,
-                        stock: Number(stock),
-                        qty: 1
-                    });
+                    this.cart.push({ id, name, price: Number(price), calories, stock: Number(stock), qty: 1 });
                 } else {
                     this.showToast(`Maaf, stok ${name} sudah habis.`, 'error');
                 }
@@ -59,6 +76,11 @@
         get totalPrice() { return this.cart.reduce((sum, item) => sum + (item.price * item.qty), 0); },
         get totalCalories() { return this.cart.reduce((sum, item) => sum + (item.calories * item.qty), 0); },
     
+        // Fungsi pembantu untuk filter
+        isMenuVisible(menuName) {
+            return this.search === '' || menuName.toLowerCase().includes(this.search.toLowerCase());
+        },
+    
         async processOrder() {
             if (this.cart.length === 0) {
                 this.showToast('Keranjang belanja Anda masih kosong.', 'warning');
@@ -66,7 +88,6 @@
             }
     
             this.isLoading = true;
-    
             const formData = new FormData(document.getElementById('order-form'));
             formData.append('cart_data', JSON.stringify(this.cart));
             formData.append('latitude', this.lat);
@@ -75,10 +96,7 @@
             try {
                 let response = await fetch('{{ route('customer.orders.store') }}', {
                     method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    },
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
                     body: formData
                 });
     
@@ -86,31 +104,20 @@
     
                 if (response.ok && result.snap_token) {
                     window.snap.pay(result.snap_token, {
-                        // 💡 3. Ubah menjadi Arrow Function agar 'this' merujuk ke Alpine
                         onSuccess: (statusResult) => {
-                            // Tampilkan toast sukses
                             this.showToast('Pembayaran berhasil diproses!.', 'success');
-    
-                            // Beri delay sebelum redirect agar pengguna bisa membaca toast
-                            setTimeout(() => {
-                                window.location.href = '{{ route('customer.orders.index') }}?status=success';
-                            }, 2500);
+                            setTimeout(() => { window.location.href = '{{ route('customer.orders.index') }}?status=success'; }, 2500);
                         },
                         onPending: (statusResult) => {
-                            // Tampilkan toast peringatan/pending
                             this.showToast('Menunggu pembayaran diselesaikan.', 'warning');
-    
-                            // Beri delay sebelum redirect
-                            setTimeout(() => {
-                                window.location.href = '{{ route('customer.orders.index') }}?status=pending';
-                            }, 2500);
+                            setTimeout(() => { window.location.href = '{{ route('customer.orders.index') }}?status=pending'; }, 2500);
                         },
                         onError: (statusResult) => {
-                            this.showToast('Pembayaran gagal, silakan coba lagi dari riwayat pesanan.', 'error');
+                            this.showToast('Pembayaran gagal.', 'error');
                             setTimeout(() => { window.location.reload(); }, 2500);
                         },
                         onClose: () => {
-                            this.showToast('Anda menutup halaman pembayaran. Pesanan disimpan sebagai pending.', 'warning');
+                            this.showToast('Anda menutup halaman pembayaran.', 'warning');
                             setTimeout(() => { window.location.reload(); }, 2500);
                         }
                     });
@@ -118,8 +125,7 @@
                     this.showToast(result.message || 'Terjadi kesalahan sistem.', 'error');
                 }
             } catch (error) {
-                console.error(error);
-                this.showToast('Gagal memproses pesanan. Periksa koneksi internet Anda.', 'error');
+                this.showToast('Gagal memproses pesanan.', 'error');
             } finally {
                 this.isLoading = false;
             }
@@ -188,49 +194,20 @@
                 </div>
             </div>
         </div>
+        <button @click="fetchRecommendation" :disabled="isLoading"
+            class="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out">
+            <span x-text="isLoading ? 'Menganalisis profil Anda...' : '✨ Dapatkan Rekomendasi Menu dari AI'">
+                ✨ Dapatkan Rekomendasi Menu dari AI
+            </span>
+        </button>
 
-        <div x-data="{
-            isLoading: false,
-            recommendationData: null,
-        
-            async fetchRecommendation() {
-                this.isLoading = true;
-                try {
-                    const response = await fetch('{{ route('customer.orders.ai') }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        }
-                    });
-                    const data = await response.json();
-                    if (response.ok) {
-                        this.recommendationData = data.recommendation;
-                    } else {
-                        console.log('Error dari Google:', data.google_error);
-                        alert(data.error + ' - Silakan cek Inspect Element -> Console untuk detailnya.');
-                    }
-                } catch (error) {
-                    console.error(error);
-                } finally {
-                    this.isLoading = false;
-                }
-            }
-        }">
-            <button @click="fetchRecommendation" :disabled="isLoading"
-                class="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out">
-                <span x-text="isLoading ? 'Menganalisis profil Anda...' : '✨ Dapatkan Rekomendasi Menu AI'"></span>
-            </button>
-
-            <div x-show="recommendationData" class="mt-4 p-4 bg-emerald-50 rounded-xl border border-emerald-200"
-                x-cloak>
-                <h4 class="font-bold text-emerald-800">Rekomendasi Ahli Gizi AI:</h4>
-                <p class="text-sm text-slate-600 mt-1" x-text="recommendationData?.reasoning"></p>
-                <p class="text-xs font-semibold text-emerald-700 mt-2">
-                    Total Energi Rekomendasi: <span x-text="recommendationData?.total_calories_recommended"></span>
-                    Kkal
-                </p>
-            </div>
+        <div x-show="recommendationData" class="mt-4 p-4 bg-emerald-50 rounded-xl border border-emerald-200" x-cloak>
+            <h4 class="font-bold text-emerald-800">Rekomendasi dari AI:</h4>
+            <p class="text-sm text-slate-600 mt-1" x-text="recommendationData?.reasoning"></p>
+            <p class="text-xs font-semibold text-emerald-700 mt-2">
+                Total Energi Rekomendasi: <span x-text="recommendationData?.total_calories_recommended"></span>
+                Kkal
+            </p>
         </div>
 
         @if (session('success'))
@@ -242,13 +219,31 @@
 
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-
             <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 @forelse($menus as $menu)
-                    <div x-show="search === '' || '{{ strtolower(addslashes($menu->name)) }}'.includes(search.toLowerCase())"
-                        class="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition">
+                    {{-- PERBAIKAN: Menggunakan fungsi isMenuVisible agar tidak ada error quote --}}
+                    <div x-show="isMenuVisible('{{ addslashes($menu->name) }}')"
+                        :class="recommendedMeals[{{ $menu->id }}] ?
+                            'order-first ring-2 ring-violet-500 shadow-lg scale-[1.02]' : 'border-slate-100'"
+                        class="bg-white rounded-2xl border p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-300 relative">
 
                         <div class="w-full h-40 mb-4 rounded-xl overflow-hidden bg-slate-50 relative group">
+
+                            <div x-show="recommendedMeals[{{ $menu->id }}]"
+                                x-transition:enter="transition ease-out duration-300"
+                                x-transition:enter-start="opacity-0 scale-90 translate-y-[-10px]"
+                                x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                                class="absolute top-2 right-2 z-10 bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-extrabold text-[10px] tracking-wide uppercase px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1"
+                                x-cloak>
+                                <svg class="w-3 h-3 animate-pulse text-amber-300" fill="currentColor"
+                                    viewBox="0 0 20 20">
+                                    <path
+                                        d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 11-2 0v-1a1 1 0 112 0v1zM14.243 15.657a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM10 16a1 1 0 100 2v-1a1 1 0 100-2v1zM5.757 14.243a1 1 0 00-1.414 1.414l.707.707a1 1 0 001.414-1.414l-.707-.707zM4 10a1 1 0 112 0v1a1 1 0 11-2 0v-1zM6.464 4.343a1 1 0 10-1.414 1.414l.707.707a1 1 0 001.414-1.414l-.707-.707z">
+                                    </path>
+                                </svg>
+                                <span x-text="recommendedMeals[{{ $menu->id }}]"></span>
+                            </div>
+
                             @if ($menu->image_path)
                                 <img src="{{ asset('storage/' . $menu->image_path) }}" alt="{{ $menu->name }}"
                                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
@@ -274,10 +269,8 @@
                                     class="grid grid-cols-3 gap-1 bg-slate-50 p-2 rounded-xl text-[11px] text-slate-500 text-center font-semibold mt-2">
                                     <div>Protein: <span
                                             class="text-slate-800">{{ $menu->nutrition->protein_g }}g</span></div>
-
                                     <div>Karbo: <span class="text-slate-800">{{ $menu->nutrition->carbs_g }}g</span>
                                     </div>
-
                                     <div>Lemak: <span class="text-slate-800">{{ $menu->nutrition->fat_g }}g</span>
                                     </div>
                                 </div>
@@ -291,13 +284,8 @@
                                     Porsi</span>
                             </span>
                             <button @if ($menu->stock <= 0) disabled @endif
-                                @click="addMenu(
-                                {{ $menu->id }}, 
-                                '{{ addslashes($menu->name) }}', 
-                                {{ $menu->price }}, 
-                                {{ $menu->nutrition->calories ?? 0 }}, 
-                                {{ $menu->stock }}  )"
-                                class="bg-slate-900 hover:bg-slate-800 {{ $menu->stock <= 0 ? 'opacity-50 cursor-not-allowed' : '' }} text-white font-bold text-xs py-2 px-4 rounded-xl transition shadow-sm">
+                                @click="addMenu({{ $menu->id ?? 0 }}, '{{ addslashes($menu->name) }}', {{ $menu->price ?? 0 }}, {{ $menu->nutrition->calories ?? 0 }}, {{ $menu->stock ?? 0 }} )"
+                                class="bg-slate-900 hover:bg-slate-800 {{ $menu->stock <= 0 ? 'opacity-50 cursor-not-allowed' : '' }} text-white font-bold text-xs py-2 px-4 rounded-xl transition shadow-sm z-20">
                                 + Tambah
                             </button>
                         </div>
