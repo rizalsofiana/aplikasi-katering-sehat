@@ -12,12 +12,12 @@
                 <h4 class="text-3xl font-black text-amber-600 mt-2">{{ $antreanKonsultasi }} Antrean</h4>
             </div>
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Menu Terkompilasi AI</span>
-                <h4 class="text-3xl font-black text-slate-800 mt-2">{{ $menuTerkompilasiAI }} Menu</h4>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Konsultasi Berlangsung</span>
+                <h4 class="text-3xl font-black text-indigo-600 mt-2">{{ $konsultasiBerlangsung }} Konsultasi</h4>
             </div>
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Rating Kepuasan Menu</span>
-                <h4 class="text-3xl font-black text-emerald-600 mt-2">4.9 / 5.0</h4>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Menu Terkompilasi AI</span>
+                <h4 class="text-3xl font-black text-slate-800 mt-2">{{ $menuTerkompilasiAI }} Menu</h4>
             </div>
         </div>
     </div>

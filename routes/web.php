@@ -47,8 +47,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             $antreanKonsultasi = Consultation::where('status', 'open')
                 ->whereNull('nutritionist_id')->count();
 
+            $konsultasiBerlangsung = Consultation::where('status', 'on_going')
+                ->whereNotNull('nutritionist_id')->count();
+
             $menuTerkompilasiAI = Menu::count();
-            return view('nutritionist.nutritionist', compact('antreanKonsultasi', 'menuTerkompilasiAI', 'profile'));
+            return view('nutritionist.nutritionist', compact('antreanKonsultasi', 'konsultasiBerlangsung', 'menuTerkompilasiAI', 'profile'));
         } elseif ($user->role === 'driver') {
             return redirect()->route('deliveries.index');
         }

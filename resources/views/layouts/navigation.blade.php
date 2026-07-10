@@ -42,10 +42,6 @@
                             class="inline-flex items-center px-1 pt-1 border-b-2 {{ request()->routeIs('nutritionist.consultation.*') ? 'border-emerald-500 text-emerald-600 font-bold' : 'border-transparent text-slate-500 hover:text-emerald-600 hover:border-emerald-300' }} text-sm font-medium leading-5 transition duration-150 ease-in-out">
                             Antrean Konsultasi
                         </a>
-                        <a href="#"
-                            class="inline-flex items-center px-1 pt-1 border-b-2 {{ request()->routeIs('nutritionist.validation') ? 'border-emerald-500 text-emerald-600 font-bold' : 'border-transparent text-slate-500 hover:text-emerald-600 hover:border-emerald-300' }} text-sm font-medium leading-5 transition duration-150 ease-in-out">
-                            Validasi Menu AI
-                        </a>
                     @elseif(Auth::user()->role === 'driver')
                         <a href="{{ route('dashboard') }}"
                             class="inline-flex items-center px-1 pt-1 border-b-2 {{ request()->routeIs('deliveries.index') ? 'border-emerald-500 text-emerald-600 font-bold' : 'border-transparent text-slate-500 hover:text-emerald-600 hover:border-emerald-300' }} text-sm font-medium leading-5 transition duration-150 ease-in-out">
