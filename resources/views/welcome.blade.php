@@ -107,46 +107,61 @@
                 </div>
             </div>
 
-            <div class="relative flex justify-center">
-                <div
-                    class="w-72 h-72 sm:w-96 sm:h-96 rounded-3xl bg-gradient-to-tr from-emerald-500 to-teal-600 absolute transform rotate-6 opacity-10">
+            @if ($featuredMenu)
+                <div class="relative flex justify-center">
+                    <div
+                        class="w-72 h-72 sm:w-96 sm:h-96 rounded-3xl bg-gradient-to-tr from-emerald-500 to-teal-600 absolute transform rotate-6 opacity-10">
+                    </div>
+                    <div
+                        class="w-full max-w-sm bg-white border border-slate-100 shadow-xl rounded-3xl p-6 sm:p-8 flex flex-col justify-between relative z-10 mx-4">
+
+                        <!-- Header: Label & Kalori -->
+                        <div class="flex justify-between items-center">
+                            <span class="bg-emerald-100 text-emerald-800 font-bold text-xs px-2.5 py-1 rounded-full">
+                                Menu Hari Ini
+                            </span>
+                            <span class="text-xs sm:text-sm font-bold text-slate-400 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                    fill="currentColor" class="bi bi-fire me-1.5 text-red-500" viewBox="0 0 16 16">
+                                    <path
+                                        d="M8 16c3.314 0 6-2 6-5.5 0-1.5-.5-4-2.5-6 .25 1.5-1.25 2-1.25 2C11 4 9 .5 6 0c.357 2 .5 4-2 6-1.25 1-2 2.729-2 4.5C2 14 4.686 16 8 16m0-1c-1.657 0-3-1-3-2.75 0-.75.25-2 1.25-3C6.125 10 7 10.5 7 10.5c-.375-1.25.5-3.25 2-3.5-.179 1-.25 2 1 3 .625.5 1 1.364 1 2.25C11 14 9.657 15 8 15" />
+                                </svg>
+                                {{ $featuredMenu->nutrition->calories ?? 0 }} kkal
+                            </span>
+                        </div>
+
+                        <!-- Body: Nama Menu & Deskripsi -->
+                        <div class="my-6">
+                            <span class="text-3xl sm:text-4xl">🥗</span>
+                            <!-- Anda bisa ganti dengan tag <img> jika punya field gambar -->
+                            <h3 class="text-lg sm:text-xl font-bold text-slate-900 mt-2">
+                                {{ $featuredMenu->name }}
+                            </h3>
+                            <p class="text-xs text-slate-500 mt-1 line-clamp-2">
+                                {{ $featuredMenu->description ?? 'Deskripsi menu belum tersedia.' }}
+                            </p>
+                        </div>
+
+                        <!-- Footer: Makronutrisi -->
+                        <div
+                            class="border-t border-slate-100 pt-4 flex justify-between text-center text-xs text-slate-600">
+                            <div>
+                                <p class="font-bold text-slate-900">{{ $featuredMenu->nutrition->protein_g ?? 0 }}g</p>
+                                <p class="text-[10px] sm:text-xs">Protein</p>
+                            </div>
+                            <div>
+                                <p class="font-bold text-slate-900">{{ $featuredMenu->nutrition->carbs_g ?? 0 }}g</p>
+                                <p class="text-[10px] sm:text-xs">Karbo</p>
+                            </div>
+                            <div>
+                                <p class="font-bold text-slate-900">{{ $featuredMenu->nutrition->fat_g ?? 0 }}g</p>
+                                <p class="text-[10px] sm:text-xs">Lemak</p>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
-                <div
-                    class="w-full max-w-sm bg-white border border-slate-100 shadow-xl rounded-3xl p-6 sm:p-8 flex flex-col justify-between relative z-10 mx-4">
-                    <div class="flex justify-between items-center">
-                        <span class="bg-emerald-100 text-emerald-800 font-bold text-xs px-2.5 py-1 rounded-full">Menu
-                            Hari Ini</span>
-                        <span class="text-xs sm:text-sm font-bold text-slate-400 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor"
-                                class="bi bi-fire me-1.5 text-red-500" viewBox="0 0 16 16">
-                                <path
-                                    d="M8 16c3.314 0 6-2 6-5.5 0-1.5-.5-4-2.5-6 .25 1.5-1.25 2-1.25 2C11 4 9 .5 6 0c.357 2 .5 4-2 6-1.25 1-2 2.729-2 4.5C2 14 4.686 16 8 16m0-1c-1.657 0-3-1-3-2.75 0-.75.25-2 1.25-3C6.125 10 7 10.5 7 10.5c-.375-1.25.5-3.25 2-3.5-.179 1-.25 2 1 3 .625.5 1 1.364 1 2.25C11 14 9.657 15 8 15" />
-                            </svg>
-                            450 kkal
-                        </span>
-                    </div>
-                    <div class="my-6">
-                        <span class="text-3xl sm:text-4xl">🥗</span>
-                        <h3 class="text-lg sm:text-xl font-bold text-slate-900 mt-2">Grilled Chicken Salad</h3>
-                        <p class="text-xs text-slate-500 mt-1">Dada ayam panggang, selada organik, alpukat, dengan lemon
-                            dressing.</p>
-                    </div>
-                    <div class="border-t border-slate-100 pt-4 flex justify-between text-center text-xs text-slate-600">
-                        <div>
-                            <p class="font-bold text-slate-900">35g</p>
-                            <p class="text-[10px] sm:text-xs">Protein</p>
-                        </div>
-                        <div>
-                            <p class="font-bold text-slate-900">20g</p>
-                            <p class="text-[10px] sm:text-xs">Karbo</p>
-                        </div>
-                        <div>
-                            <p class="font-bold text-slate-900">12g</p>
-                            <p class="text-[10px] sm:text-xs">Lemak</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            @endif
 
         </div>
     </header>

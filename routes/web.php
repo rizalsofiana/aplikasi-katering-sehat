@@ -20,9 +20,14 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [function () {
+    $featuredMenu = Menu::with('nutrition')->inRandomOrder()->first();
+
+    // Atau jika ingin mengambil menu terbaru:
+    // $featuredMenu = Menu::with('nutrition')->latest()->first();
+
+    return view('welcome', compact('featuredMenu'));
+}]);
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
