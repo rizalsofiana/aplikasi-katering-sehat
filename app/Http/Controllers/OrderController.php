@@ -187,7 +187,7 @@ class OrderController extends Controller
         $totalDayCalories = $existingCalories + $cartCalories;
         $totalDayProtein = $existingProtein + $cartProtein;
 
-        if ($totalDayCalories > $dailyCalorieTarget) {
+        if ($cartCalories > $dailyCalorieTarget) {
             return response()->json([
                 'message' => "TIDAK SEHAT! 🛑 Pesanan ini membuat Anda kelebihan kalori. Total konsumsi Anda pada tanggal tersebut akan menjadi {$totalDayCalories} Kkal (Melebihi target batas {$dailyCalorieTarget} Kkal). Silakan kurangi porsi."
             ], 400);
@@ -245,10 +245,6 @@ class OrderController extends Controller
 
             return $order;
         });
-
-        $profile->update([
-            'daily_calorie_target' => $dailyCalorieTarget - $cartCalories,
-        ]);
 
         // =========================================================================
         // 🟢 TAHAP 6: INTEGRASI MIDTRANS SNAP

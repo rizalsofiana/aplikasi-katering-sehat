@@ -285,7 +285,7 @@
                             </span>
                             <button @if ($menu->stock <= 0) disabled @endif
                                 @click="addMenu({{ $menu->id ?? 0 }}, '{{ addslashes($menu->name) }}', {{ $menu->price ?? 0 }}, {{ $menu->nutrition->calories ?? 0 }}, {{ $menu->stock ?? 0 }} )"
-                                class="bg-slate-900 hover:bg-slate-800 {{ $menu->stock <= 0 ? 'opacity-50 cursor-not-allowed' : '' }} text-white font-bold text-xs py-2 px-4 rounded-xl transition shadow-sm z-20">
+                                class="bg-slate-900 hover:bg-slate-800 {{ $menu->stock <= 0 ? 'opacity-50 cursor-not-allowed' : '' }} text-white font-bold text-xs py-2 px-4 rounded-xl transition shadow-sm">
                                 + Tambah
                             </button>
                         </div>
@@ -371,7 +371,7 @@
                             <label
                                 class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Alamat
                                 Pengiriman</label>
-                            <textarea name="delivery_address" placeholder="Masukkan alamat disini..."
+                            <textarea name="delivery_address" placeholder="Masukkan detail alamat disini..."
                                 class="block w-full rounded-xl border-slate-200 text-xs mb-2" required></textarea>
 
                             <button type="button" @click="openMapModal = true; initCustomerMap()"

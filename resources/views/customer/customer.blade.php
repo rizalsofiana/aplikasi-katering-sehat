@@ -15,10 +15,19 @@
                 <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-6 text-white shadow-md">
                     <div class="flex justify-between items-start">
                         <div>
-                            <p class="text-emerald-100 text-xs font-semibold uppercase tracking-wider">Target Energi
+                            <p class="text-emerald-100 text-xs font-semibold uppercase tracking-wider">
+                                Sisa Target Energi Hari Ini
                             </p>
-                            <h4 class="text-3xl font-extrabold mt-2">{{ $profile->daily_calorie_target }} <span
-                                    class="text-sm font-normal">kkal</span></h4>
+
+                            <h4 class="text-3xl font-extrabold mt-2">
+                                {{ $sisaKalori }}
+                                <span class="text-sm font-normal">kkal</span>
+                            </h4>
+
+                            {{-- Opsional: Tambahkan indikator visual target asli --}}
+                            <p class="text-emerald-200 text-[10px] mt-1">
+                                Dari total harian: {{ $profile->daily_calorie_target ?? 0 }} kkal
+                            </p>
                         </div>
                         <div class="bg-white bg-opacity-20 p-2 rounded-lg">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
@@ -160,16 +169,178 @@
 
             </div>
 
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h4 class="font-bold text-gray-800 mb-2">Metrik Fisik Terdaftar Anda:</h4>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
-                    <div>• Umur: <span class="font-semibold text-gray-900">{{ $profile->age }} tahun</span></div>
-                    <div>• Berat Badan: <span class="font-semibold text-gray-900">{{ $profile->weight_kg }}
-                            kg</span></div>
-                    <div>• Tinggi Badan: <span class="font-semibold text-gray-900">{{ $profile->height_cm }}
-                            cm</span></div>
-                    <div>• Aktivitas: <span
-                            class="font-semibold text-gray-900 capitalize">{{ str_replace('_', ' ', $profile->activity_level) }}</span>
+            <!-- Pastikan ada x-data="{ editProfileModal: false }" di div parent terluar -->
+            <div x-data="{ editProfileModal: false }">
+
+                <!-- Card Metrik Fisik Anda -->
+                <div
+                    class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-start justify-between gap-4">
+                    <div class="flex-1">
+                        <h4 class="font-bold text-gray-800 mb-3">Metrik Fisik Terdaftar Anda:</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
+                            <div>• Umur: <span class="font-semibold text-gray-900">{{ $profile->age }} tahun</span>
+                            </div>
+                            <div>• Berat Badan: <span class="font-semibold text-gray-900">{{ $profile->weight_kg }}
+                                    kg</span></div>
+                            <div>• Tinggi Badan: <span class="font-semibold text-gray-900">{{ $profile->height_cm }}
+                                    cm</span></div>
+                            <div>• Aktivitas: <span
+                                    class="font-semibold text-gray-900 capitalize">{{ str_replace('_', ' ', $profile->activity_level) }}</span>
+                            </div>
+                        </div>
+                        @if ($profile->allergies)
+                            <div class="mt-3 text-sm text-rose-500">
+                                • Alergi: <span class="font-semibold">{{ $profile->allergies }}</span>
+                            </div>
+                        @endif
+                    </div>
+
+                    <!-- Tombol Buka Modal -->
+                    <button @click="editProfileModal = true"
+                        class="shrink-0 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2 px-4 rounded-lg transition">
+                        ✏️ Ubah Data
+                    </button>
+                </div>
+
+                <!-- MODAL EDIT DATA FISIK -->
+                <div x-show="editProfileModal" class="fixed inset-0 z-50 overflow-y-auto" x-cloak
+                    style="display: none;">
+                    <!-- Latar belakang gelap (Overlay) -->
+                    <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
+                        @click="editProfileModal = false"></div>
+
+                    <div
+                        class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0 pointer-events-none">
+                        <div x-show="editProfileModal" x-transition:enter="ease-out duration-300"
+                            x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                            x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                            x-transition:leave="ease-in duration-200"
+                            x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                            x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                            class="relative bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-2xl w-full pointer-events-auto border border-slate-100">
+
+                            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+                                    <h3 class="text-lg font-bold text-gray-900">Perbarui Metrik Fisik</h3>
+                                    <button @click="editProfileModal = false"
+                                        class="text-gray-400 hover:text-gray-500 font-bold text-xl">&times;</button>
+                                </div>
+
+                                <!-- FORM UPDATE -->
+                                <form action="{{ route('customer.profile.update') }}" method="POST">
+                                    @csrf
+                                    @method('PUT')
+
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <!-- Jenis Kelamin -->
+                                        <div>
+                                            <label class="block text-xs font-bold text-gray-700 mb-1">Jenis
+                                                Kelamin</label>
+                                            <select name="gender"
+                                                class="w-full text-sm rounded-lg border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
+                                                required>
+                                                <option value="male"
+                                                    {{ $profile->gender == 'male' ? 'selected' : '' }}>Laki-laki
+                                                </option>
+                                                <option value="female"
+                                                    {{ $profile->gender == 'female' ? 'selected' : '' }}>Perempuan
+                                                </option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Umur -->
+                                        <div>
+                                            <label class="block text-xs font-bold text-gray-700 mb-1">Umur
+                                                (Tahun)</label>
+                                            <input type="number" name="age" value="{{ $profile->age }}"
+                                                class="w-full text-sm rounded-lg border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
+                                                min="10" max="100" required>
+                                        </div>
+
+                                        <!-- Berat Badan -->
+                                        <div>
+                                            <label class="block text-xs font-bold text-gray-700 mb-1">Berat Badan
+                                                (Kg)</label>
+                                            <input type="number" step="0.1" name="weight_kg"
+                                                value="{{ $profile->weight_kg }}"
+                                                class="w-full text-sm rounded-lg border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
+                                                min="30" max="300" required>
+                                        </div>
+
+                                        <!-- Tinggi Badan -->
+                                        <div>
+                                            <label class="block text-xs font-bold text-gray-700 mb-1">Tinggi Badan
+                                                (Cm)</label>
+                                            <input type="number" name="height_cm" value="{{ $profile->height_cm }}"
+                                                class="w-full text-sm rounded-lg border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
+                                                min="100" max="250" required>
+                                        </div>
+
+                                        <!-- Level Aktivitas -->
+                                        <div>
+                                            <label class="block text-xs font-bold text-gray-700 mb-1">Aktivitas
+                                                Harian</label>
+                                            <select name="activity_level"
+                                                class="w-full text-sm rounded-lg border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
+                                                required>
+                                                <option value="sedentary"
+                                                    {{ $profile->activity_level == 'sedentary' ? 'selected' : '' }}>
+                                                    Sangat Jarang Olahraga</option>
+                                                <option value="lightly_active"
+                                                    {{ $profile->activity_level == 'lightly_active' ? 'selected' : '' }}>
+                                                    Jarang (1-3 hari/minggu)</option>
+                                                <option value="moderately_active"
+                                                    {{ $profile->activity_level == 'moderately_active' ? 'selected' : '' }}>
+                                                    Normal (3-5 hari/minggu)</option>
+                                                <option value="very_active"
+                                                    {{ $profile->activity_level == 'very_active' ? 'selected' : '' }}>
+                                                    Sering (6-7 hari/minggu)</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Tujuan Diet -->
+                                        <div>
+                                            <label class="block text-xs font-bold text-gray-700 mb-1">Tujuan
+                                                Diet</label>
+                                            <select name="diet_goal"
+                                                class="w-full text-sm rounded-lg border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
+                                                required>
+                                                <option value="weight_loss"
+                                                    {{ $profile->diet_goal == 'weight_loss' ? 'selected' : '' }}>
+                                                    Menurunkan Berat Badan</option>
+                                                <option value="maintenance"
+                                                    {{ $profile->diet_goal == 'maintenance' ? 'selected' : '' }}>
+                                                    Menjaga Berat Badan</option>
+                                                <option value="weight_gain"
+                                                    {{ $profile->diet_goal == 'weight_gain' ? 'selected' : '' }}>
+                                                    Menaikkan Berat Badan</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Alergi (Full width) -->
+                                    <div class="mt-4">
+                                        <label class="block text-xs font-bold text-gray-700 mb-1">Alergi Makanan
+                                            (Opsional)</label>
+                                        <input type="text" name="allergies" value="{{ $profile->allergies }}"
+                                            placeholder="Contoh: Kacang, Seafood, Susu sapi..."
+                                            class="w-full text-sm rounded-lg border-gray-300 focus:border-emerald-500 focus:ring-emerald-500">
+                                        <p class="text-[10px] text-gray-400 mt-1">Kosongkan jika tidak ada alergi.</p>
+                                    </div>
+
+                                    <div class="mt-6 flex justify-end gap-3">
+                                        <button type="button" @click="editProfileModal = false"
+                                            class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-bold py-2 px-4 rounded-lg text-sm transition">
+                                            Batal
+                                        </button>
+                                        <button type="submit"
+                                            class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg text-sm shadow-md transition">
+                                            Simpan Perubahan
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -13,6 +13,7 @@ use App\Models\Consultation;
 use App\Models\Delivery;
 use App\Models\Menu;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Subscription;
 use App\Models\User;
 use Carbon\Carbon;
@@ -56,6 +57,33 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return redirect()->route('deliveries.index');
         }
 
+        $today = Carbon::today('Asia/Jakarta')->format('Y-m-d');
+
+        // 2. Kalkulasi total kalori dari makanan yang dikirim hari ini
+        $kaloriTerpakaiHariIni = OrderItem::whereHas('order', function ($query) use ($user, $today) {
+            $query->where('user_id', $user->id)
+                // Opsional: Pastikan hanya menghitung pesanan yang sudah dibayar
+                // ->where('status', 'settlement') 
+                ->whereHas('deliveries', function ($deliveryQuery) use ($today) {
+                    $deliveryQuery->whereDate('delivery_date', $today);
+                });
+        })
+            // Eager load relasi untuk mencegah N+1 Query problem
+            ->with('menu.nutrition')
+            ->get()
+            ->sum(function ($item) {
+                // Kalikan jumlah porsi (quantity) dengan jumlah kalori per porsi
+                $kaloriPerPorsi = $item->menu->nutrition->calories ?? 0;
+                return $kaloriPerPorsi * $item->quantity;
+            });
+
+        // 3. Kurangi target harian dengan kalori yang sudah terpakai
+        $targetAwal = $profile->daily_calorie_target ?? 0;
+        $sisaKalori = $targetAwal - $kaloriTerpakaiHariIni;
+
+        // Pastikan angka sisa kalori tidak menjadi minus jika user makan berlebih
+        $sisaKalori = $sisaKalori < 0 ? 0 : $sisaKalori;
+
         $todayDeliveries = Delivery::whereHas('order', function ($query) use ($user) {
             $query->where('user_id', $user->id);
         })->whereDate('delivery_date', Carbon::today('Asia/Jakarta'))
@@ -70,7 +98,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->latest()
             ->first();
 
-        return view('customer.customer', compact('profile', 'todayDeliveries', 'currentSubscription'));
+        return view('customer.customer', compact('profile', 'todayDeliveries', 'currentSubscription', 'sisaKalori'));
     })->name('dashboard');
 
     Route::post('/user-profile/store', [ProfileController::class, 'store'])->name('profile.store');
@@ -117,6 +145,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::middleware(['role:customer'])->group(function () {
+        Route::put('/profile/update', [ProfileController::class, 'update'])->name('customer.profile.update');
+
         Route::get('/order', [OrderController::class, 'index'])->name('customer.orders.index');
         Route::post('/order/checkout', [OrderController::class, 'store'])->name('customer.orders.store');
         Route::get('/order/history', [CustomerOrderController::class, 'index'])->name('customer.orders.history');

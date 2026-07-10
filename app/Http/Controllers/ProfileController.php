@@ -80,17 +80,60 @@ class ProfileController extends Controller
     /**
      * Update the user's profile information.
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(Request $request)
     {
-        $request->user()->fill($request->validated());
+        $request->validate([
+            'gender' => ['required', 'in:male,female'],
+            'age' => ['required', 'integer', 'min:10', 'max:100'],
+            'weight_kg' => ['required', 'numeric', 'min:30', 'max:300'],
+            'height_cm' => ['required', 'numeric', 'min:100', 'max:250'],
+            'activity_level' => ['required', 'in:sedentary,lightly_active,moderately_active,very_active'],
+            'diet_goal' => ['required', 'in:weight_loss,maintenance,weight_gain'],
+            'allergies' => ['nullable', 'string', 'max:255'],
+        ]);
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        $weight = $request->weight_kg;
+        $height = $request->height_cm;
+        $age = $request->age;
+
+        // Kalkulasi Ulang BMR & TDEE (Rumus Harris-Benedict)
+        if ($request->gender === 'male') {
+            $bmr = 88.362 + (13.397 * $weight) + (4.799 * $height) - (5.677 * $age);
+        } else {
+            $bmr = 447.593 + (9.247 * $weight) + (3.098 * $height) - (4.330 * $age);
         }
 
-        $request->user()->save();
+        $activityMultipliers = [
+            'sedentary' => 1.2,
+            'lightly_active' => 1.375,
+            'moderately_active' => 1.55,
+            'very_active' => 1.725,
+        ];
+        $tdee = $bmr * $activityMultipliers[$request->activity_level];
 
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+        if ($request->diet_goal === 'weight_loss') {
+            $dailyCalorieTarget = $tdee - 500;
+        } elseif ($request->diet_goal === 'weight_gain') {
+            $dailyCalorieTarget = $tdee + 500;
+        } else {
+            $dailyCalorieTarget = $tdee;
+        }
+
+        // Update database user yang sedang login
+        $profile = Auth::user()->profile;
+
+        $profile->update([
+            'gender' => $request->gender,
+            'age' => $request->age,
+            'weight_kg' => $request->weight_kg,
+            'height_cm' => $request->height_cm,
+            'activity_level' => $request->activity_level,
+            'diet_goal' => $request->diet_goal,
+            'daily_calorie_target' => round($dailyCalorieTarget),
+            'allergies' => $request->allergies,
+        ]);
+
+        return redirect()->back()->with('success', 'Metrik fisik dan target kalori berhasil diperbarui!');
     }
 
     /**
